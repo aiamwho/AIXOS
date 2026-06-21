@@ -30,7 +30,8 @@ COMMON_SRCS := \
 
 COMMON_INCLUDES := -I. -Iinclude -Iarch/include
 COMMON_WARNINGS := -Wall -Wextra -Werror -Wshadow -Wno-unused-parameter
-COMMON_CFLAGS := $(COMMON_INCLUDES) $(COMMON_WARNINGS) -std=c99 \
+CONFIG_CFLAGS ?=
+COMMON_CFLAGS := $(COMMON_INCLUDES) $(COMMON_WARNINGS) $(CONFIG_CFLAGS) -std=c99 \
 	-ffunction-sections -fdata-sections -ffreestanding -MMD -MP
 
 ARM_PREFIX ?= arm-none-eabi-
@@ -82,7 +83,8 @@ HOST_KERNEL_SRCS := $(COMMON_SRCS)
 HOST_OBJS := $(addprefix $(HOST_BUILD)/,$(HOST_KERNEL_SRCS:.c=.o) $(HOST_TEST_SRCS:.c=.o))
 HOST_MPU_TEST_SRCS := tests/test_mpu_main.c tests/test_mpu.c tests/host/arch_host.c
 HOST_MPU_OBJS := $(addprefix $(BUILD_DIR)/host-mpu/,$(HOST_KERNEL_SRCS:.c=.o) $(HOST_MPU_TEST_SRCS:.c=.o))
-HOST_CFLAGS := -Itests/host $(COMMON_INCLUDES) $(COMMON_WARNINGS) -std=c99 \
+HOST_CFLAGS := -Itests/host $(COMMON_INCLUDES) $(COMMON_WARNINGS) \
+	$(CONFIG_CFLAGS) -std=c99 \
 	-Wno-unneeded-internal-declaration $(HOST_OPT) $(HOST_SANITIZERS) \
 	-DAIXOS_HOST_TEST=1 -MMD -MP
 
@@ -230,6 +232,12 @@ $(BUILD_DIR)/host-mpu/%.o: %.c
 toolcheck:
 	@sh tools/check_tools.sh
 
+config:
+	@python3 tools/menu_config.py
+
+oldconfig:
+	@python3 tools/menu_config.py --show
+
 renode: arm
 	@mkdir -p test-results/renode
 	@rm -f tools/renode.config.lock
@@ -273,7 +281,7 @@ clean:
 	test test-mpu test-asan test-o2 test-os verify toolcheck renode renode-riscv \
 	renode-riscv-stress test-all coverage analyze ram-report manifest \
 	posix-api-check reproducible quality evidence-package bench-build \
-	latency-bench instruction-sim clean
+	latency-bench instruction-sim config oldconfig clean
 
 -include $(ARM_OBJS:.o=.d) $(RISCV_OBJS:.o=.d) $(HOST_OBJS:.o=.d) \
 	$(HOST_MPU_OBJS:.o=.d)

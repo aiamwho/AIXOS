@@ -1,7 +1,18 @@
 # AIXOS v1.0 Configuration Guide
 
-Most product-level tuning is done in `config/aixos_cfg.h`. This guide explains
-the configuration groups and the expected customer review points.
+Most product-level tuning is done through `make config`, which writes
+`config/aixos_user_cfg.h`. The base defaults and validation checks remain in
+`config/aixos_cfg.h`.
+
+For non-interactive or CI builds, pass compile-time overrides through
+`CONFIG_CFLAGS`, for example:
+
+```sh
+make arm CONFIG_CFLAGS=-DAIXOS_CFG_SCHEDULER=AIXOS_CFG_SCHED_SIMPLE
+```
+
+Use `make oldconfig` to print the current menu-configurable values without
+changing the file.
 
 ## Priority and Task Limits
 
@@ -40,6 +51,26 @@ margin for diagnostics and recovery paths.
 
 Changing tick frequency affects timeout resolution, timer callback latency,
 CPU overhead, and test expectations.
+
+## Scheduler Backend
+
+| Macro | Value | Purpose |
+|---|---|---|
+| `AIXOS_CFG_SCHEDULER` | `AIXOS_CFG_SCHED_BITMAP` | Default bitmap multi-queue scheduler |
+| `AIXOS_CFG_SCHEDULER` | `AIXOS_CFG_SCHED_SIMPLE` | Single sorted ready-list scheduler |
+
+The bitmap backend uses one ready queue per priority plus a non-empty priority
+bitmap. It keeps ready insertion, removal, and highest-priority selection
+constant-time for the configured priority range, at the cost of more scheduler
+RAM.
+
+The simple backend is modeled after the small-system scheduler option used by
+Zephyr's `CONFIG_SCHED_SIMPLE`: one priority-sorted ready list with the best
+thread at the head. It reduces scheduler data and code size, while insertion
+and priority requeue become linear in the number of ready tasks.
+
+Run `python3 tools/scheduler_benchmark.py` to rebuild both Cortex-M3 variants
+and refresh `build/reports/scheduler_compare.csv`.
 
 ## Stack Sizing
 

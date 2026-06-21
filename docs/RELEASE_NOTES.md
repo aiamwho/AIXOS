@@ -30,6 +30,11 @@ visualization work prepared in the v0.9 baseline.
 ## Added in This Cut
 
 - `make evidence-package` for auditable release evidence collection.
+- `make config` terminal menu for customer-facing kernel裁剪.
+- Selectable scheduler backend: default bitmap multi-queue or simple sorted
+  ready list for small-system footprint optimization.
+- `tools/scheduler_benchmark.py` for Cortex-M3 scheduler size/instruction
+  comparison.
 - Requirement-to-test traceability matrix.
 - POSIX compatibility and limitation matrix.
 - Latency benchmark firmware entry for Cortex-M3 and RV32IM.

@@ -1,77 +1,157 @@
 #ifndef AIXOS_CFG_H
 #define AIXOS_CFG_H
 
+#include "config/aixos_user_cfg.h"
+
 /*
  * AIXOS v1.0 system configuration.
  * 修改此文件以适配不同硬件和应用需求
  */
 
 /* ── 优先级设置 ──────────────────────────────── */
+#ifndef AIXOS_CFG_MAX_PRIORITY
 #define AIXOS_CFG_MAX_PRIORITY          256      /* 优先级级数 (0=最低, 255=最高) */
+#endif
+#ifndef AIXOS_CFG_IDLE_PRIORITY
 #define AIXOS_CFG_IDLE_PRIORITY         0        /* Idle 任务优先级 */
+#endif
+#ifndef AIXOS_CFG_TIMER_TASK_PRIORITY
 #define AIXOS_CFG_TIMER_TASK_PRIORITY   63       /* 定时器服务任务优先级 */
+#endif
+#ifndef AIXOS_CFG_SYSTEM_TASKS_RESERVED
 #define AIXOS_CFG_SYSTEM_TASKS_RESERVED 2        /* idle + timer service */
+#endif
+#ifndef AIXOS_CFG_CAPS_PER_TASK
 #define AIXOS_CFG_CAPS_PER_TASK         16
+#endif
 
 #ifndef AIXOS_CFG_PROFILE_MINIMAL
 #define AIXOS_CFG_PROFILE_MINIMAL       0
 #endif
 
+#define AIXOS_CFG_SCHED_BITMAP          1
+#define AIXOS_CFG_SCHED_SIMPLE          2
+#ifndef AIXOS_CFG_SCHEDULER
+#define AIXOS_CFG_SCHEDULER             AIXOS_CFG_SCHED_BITMAP
+#endif
+
 /* ── 对象池大小 ──────────────────────────────── */
+#ifndef AIXOS_CFG_TASK_HANDLE_LIMIT
 #define AIXOS_CFG_TASK_HANDLE_LIMIT     256      /* 32-bit handle index capacity */
+#endif
+#ifndef AIXOS_CFG_TASK_SLOT_PAGE_SIZE
 #define AIXOS_CFG_TASK_SLOT_PAGE_SIZE   16       /* 动态任务注册页槽位数 */
+#endif
 #if AIXOS_CFG_PROFILE_MINIMAL
+#ifndef AIXOS_CFG_MAX_SEM
 #define AIXOS_CFG_MAX_SEM               4
+#endif
+#ifndef AIXOS_CFG_MAX_MUTEX
 #define AIXOS_CFG_MAX_MUTEX             4
+#endif
+#ifndef AIXOS_CFG_MAX_MQ
 #define AIXOS_CFG_MAX_MQ                4
+#endif
+#ifndef AIXOS_CFG_MAX_EVENT
 #define AIXOS_CFG_MAX_EVENT             4
+#endif
+#ifndef AIXOS_CFG_MAX_PIPE
 #define AIXOS_CFG_MAX_PIPE              2
+#endif
+#ifndef AIXOS_CFG_MAX_TIMER
 #define AIXOS_CFG_MAX_TIMER             8
+#endif
 #else
+#ifndef AIXOS_CFG_MAX_SEM
 #define AIXOS_CFG_MAX_SEM               32       /* 最大信号量数 */
+#endif
+#ifndef AIXOS_CFG_MAX_MUTEX
 #define AIXOS_CFG_MAX_MUTEX             16       /* 最大互斥量数 */
+#endif
+#ifndef AIXOS_CFG_MAX_MQ
 #define AIXOS_CFG_MAX_MQ                16       /* 最大消息队列数 */
+#endif
+#ifndef AIXOS_CFG_MAX_EVENT
 #define AIXOS_CFG_MAX_EVENT             16       /* 最大事件标志组数 */
+#endif
+#ifndef AIXOS_CFG_MAX_PIPE
 #define AIXOS_CFG_MAX_PIPE              8        /* 最大管道数 */
+#endif
+#ifndef AIXOS_CFG_MAX_TIMER
 #define AIXOS_CFG_MAX_TIMER             32       /* 最大软件定时器数 */
+#endif
 #endif
 
 /* ── 调度与时间 ──────────────────────────────── */
+#ifndef AIXOS_CFG_TIME_SLICE_TICKS
 #define AIXOS_CFG_TIME_SLICE_TICKS      1        /* 时间片 (tick 数) */
+#endif
+#ifndef AIXOS_CFG_SYSTICK_HZ
 #define AIXOS_CFG_SYSTICK_HZ            1000     /* 系统时钟频率 (Hz) */
+#endif
+#ifndef AIXOS_CFG_CPU_CLOCK_HZ
 #define AIXOS_CFG_CPU_CLOCK_HZ           72000000U
+#endif
 
 /* ── 栈大小 ──────────────────────────────────── */
+#ifndef AIXOS_CFG_IDLE_STACK_SIZE
 #define AIXOS_CFG_IDLE_STACK_SIZE       256      /* Idle 任务栈 (uint32_t 数量) */
+#endif
+#ifndef AIXOS_CFG_TIMER_STACK_SIZE
 #define AIXOS_CFG_TIMER_STACK_SIZE      512      /* 定时器服务任务栈 */
+#endif
+#ifndef AIXOS_CFG_DEFAULT_STACK_SIZE
 #define AIXOS_CFG_DEFAULT_STACK_SIZE    512      /* 默认用户任务栈 (bytes) */
+#endif
+#ifndef AIXOS_CFG_MIN_TASK_STACK_SIZE
 #define AIXOS_CFG_MIN_TASK_STACK_SIZE   192      /* 覆盖所有支持架构的初始上下文 */
+#endif
+#ifndef AIXOS_CFG_STACK_GUARD_BYTES
 #define AIXOS_CFG_STACK_GUARD_BYTES     16       /* 栈底保护区 */
+#endif
 
 /* ── 堆配置 ──────────────────────────────────── */
+#ifndef AIXOS_CFG_HEAP_SIZE
 #define AIXOS_CFG_HEAP_SIZE             (7 * 1024)      /* 堆大小 (bytes) */
+#endif
+#ifndef AIXOS_CFG_HEAP_MAGIC
 #define AIXOS_CFG_HEAP_MAGIC            0xBE05U   /* 堆完整性魔数 */
+#endif
+#ifndef AIXOS_CFG_HEAP_LOCK_ON_START
 #define AIXOS_CFG_HEAP_LOCK_ON_START    1        /* 启动后禁止新的动态分配 */
+#endif
 
 /* ── 跟踪配置 ──────────────────────────────── */
 #ifndef AIXOS_CFG_TRACE_ENABLE
 #define AIXOS_CFG_TRACE_ENABLE          (!AIXOS_CFG_PROFILE_MINIMAL)
 #endif
 #if AIXOS_CFG_PROFILE_MINIMAL
+#ifndef AIXOS_CFG_TRACE_BUFFER_SIZE
 #define AIXOS_CFG_TRACE_BUFFER_SIZE     32
+#endif
 #else
+#ifndef AIXOS_CFG_TRACE_BUFFER_SIZE
 #define AIXOS_CFG_TRACE_BUFFER_SIZE     256      /* 跟踪缓冲区条目数 */
+#endif
 #endif
 
 /* ── CPU 统计 ────────────────────────────────── */
+#ifndef AIXOS_CFG_CPU_USAGE_ENABLE
 #define AIXOS_CFG_CPU_USAGE_ENABLE      1        /* 启用 CPU 使用统计 */
+#endif
 
 /* ── 内核对象命名 ──────────────────────────── */
+#ifndef AIXOS_CFG_TASK_NAME_MAX
 #define AIXOS_CFG_TASK_NAME_MAX         16       /* 任务名最大长度 */
+#endif
+#ifndef AIXOS_CFG_TIMER_NAME_MAX
 #define AIXOS_CFG_TIMER_NAME_MAX        16       /* 定时器名最大长度 */
+#endif
 
 /* ── 分页大小 (用于 heap 内部对齐) ─────────────── */
+#ifndef AIXOS_CFG_ALIGNMENT
 #define AIXOS_CFG_ALIGNMENT             8        /* 内存分配对齐 */
+#endif
 
 /* ── 可靠性配置 ──────────────────────────────── */
 #define AIXOS_CFG_SEM_MAX_COUNT         0x7FFFFFFF
@@ -96,6 +176,11 @@
 
 #if AIXOS_CFG_MAX_PRIORITY < 2 || AIXOS_CFG_MAX_PRIORITY > 256
 #error "AIXOS_CFG_MAX_PRIORITY must be in [2, 256]"
+#endif
+
+#if AIXOS_CFG_SCHEDULER != AIXOS_CFG_SCHED_BITMAP && \
+    AIXOS_CFG_SCHEDULER != AIXOS_CFG_SCHED_SIMPLE
+#error "AIXOS_CFG_SCHEDULER must be AIXOS_CFG_SCHED_BITMAP or AIXOS_CFG_SCHED_SIMPLE"
 #endif
 
 #if AIXOS_CFG_IDLE_PRIORITY != 0
@@ -179,13 +264,27 @@
 #endif
 
 /* ── Optional subsystem configuration ───────── */
+#ifndef AIXOS_CFG_ENABLE_SIGNALS
 #define AIXOS_CFG_ENABLE_SIGNALS       1       /* 启用信号机制 */
+#endif
+#ifndef AIXOS_CFG_ENABLE_NAMESPACE
 #define AIXOS_CFG_ENABLE_NAMESPACE     1       /* 启用资源管理器命名空间 */
+#endif
+#ifndef AIXOS_CFG_ENABLE_TIME_WHEEL
 #define AIXOS_CFG_ENABLE_TIME_WHEEL    1       /* 启用时间轮 */
+#endif
+#ifndef AIXOS_CFG_ENABLE_PANIC_RESET
 #define AIXOS_CFG_ENABLE_PANIC_RESET   1       /* 启用panic受控复位 */
+#endif
+#ifndef AIXOS_CFG_ENABLE_MPU
 #define AIXOS_CFG_ENABLE_MPU           1       /* Enable user-task memory protection */
+#endif
+#ifndef AIXOS_CFG_MPU_REGIONS_PER_TASK
 #define AIXOS_CFG_MPU_REGIONS_PER_TASK 3       /* Per-task user memory regions */
+#endif
+#ifndef AIXOS_CFG_MPU_MIN_REGION_SIZE
 #define AIXOS_CFG_MPU_MIN_REGION_SIZE  32U     /* Cortex-M MPU minimum region */
+#endif
 
 #define AIXOS_CFG_FLASH_BASE           0x08000000U
 #define AIXOS_CFG_FLASH_SIZE           (512U * 1024U)

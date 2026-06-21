@@ -10,8 +10,12 @@
 extern void aixos_timing_wheel_tick(uint32_t current_tick);
 #endif
 
+#if AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_BITMAP
 static aixos_list_t ready_queues[AIXOS_CFG_MAX_PRIORITY];
-static uint64_t ready_bitmap[4];
+static uint64_t ready_bitmap[(AIXOS_CFG_MAX_PRIORITY + 63) / 64];
+#elif AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_SIMPLE
+static aixos_list_t ready_list;
+#endif
 static volatile uint64_t total_ticks;
 static volatile uint64_t idle_ticks;
 static volatile uint64_t switch_count;
@@ -20,19 +24,58 @@ aixos_tcb_t *g_cur_task;
 
 void aixos_sched_init(void)
 {
+#if AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_BITMAP
     int i;
     for (i = 0; i < AIXOS_CFG_MAX_PRIORITY; i++) {
         aixos_list_init(&ready_queues[i]);
     }
-    ready_bitmap[0] = 0;
-    ready_bitmap[1] = 0;
-    ready_bitmap[2] = 0;
-    ready_bitmap[3] = 0;
+    for (i = 0; i < (int)((AIXOS_CFG_MAX_PRIORITY + 63) / 64); i++) {
+        ready_bitmap[i] = 0;
+    }
+#elif AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_SIMPLE
+    aixos_list_init(&ready_list);
+#endif
     total_ticks = 0;
     idle_ticks = 0;
     switch_count = 0;
     g_cur_task = NULL;
 }
+
+#if AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_SIMPLE
+static void sched_simple_insert(aixos_tcb_t *tcb)
+{
+    aixos_list_t *position;
+    AIXOS_LIST_FOR_EACH(position, &ready_list) {
+        aixos_tcb_t *queued =
+            AIXOS_CONTAINER_OF(position, aixos_tcb_t, ready_node);
+        if (tcb->priority > queued->priority) {
+            __aixos_list_add(&tcb->ready_node, position->prev, position);
+            return;
+        }
+    }
+    aixos_list_add_tail(&tcb->ready_node, &ready_list);
+}
+
+static void sched_simple_insert_after_same_priority(aixos_tcb_t *tcb)
+{
+    aixos_list_t *position;
+    aixos_list_t *last_same = NULL;
+    AIXOS_LIST_FOR_EACH(position, &ready_list) {
+        aixos_tcb_t *queued =
+            AIXOS_CONTAINER_OF(position, aixos_tcb_t, ready_node);
+        if (queued->priority == tcb->priority) {
+            last_same = position;
+        } else if (queued->priority < tcb->priority) {
+            break;
+        }
+    }
+    if (last_same != NULL) {
+        __aixos_list_add(&tcb->ready_node, last_same, last_same->next);
+    } else {
+        sched_simple_insert(tcb);
+    }
+}
+#endif
 
 void aixos_sched_add_task(aixos_tcb_t *tcb)
 {
@@ -44,8 +87,12 @@ void aixos_sched_add_task(aixos_tcb_t *tcb)
     if (priority < 0 || priority >= AIXOS_CFG_MAX_PRIORITY) {
         return;
     }
+#if AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_BITMAP
     aixos_list_add_tail(&tcb->ready_node, &ready_queues[priority]);
     ready_bitmap[priority / 64] |= UINT64_C(1) << ((unsigned int)priority % 64);
+#elif AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_SIMPLE
+    sched_simple_insert(tcb);
+#endif
 }
 
 void aixos_sched_remove_task(aixos_tcb_t *tcb)
@@ -56,9 +103,13 @@ void aixos_sched_remove_task(aixos_tcb_t *tcb)
     }
     priority = tcb->priority;
     aixos_list_del(&tcb->ready_node);
+#if AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_BITMAP
     if (aixos_list_is_empty(&ready_queues[priority])) {
         ready_bitmap[priority / 64] &= ~(UINT64_C(1) << ((unsigned int)priority % 64));
     }
+#else
+    (void)priority;
+#endif
 }
 
 void aixos_sched_requeue_task(aixos_tcb_t *tcb, int old_priority)
@@ -69,40 +120,67 @@ void aixos_sched_requeue_task(aixos_tcb_t *tcb, int old_priority)
     }
     if (tcb->ready_node.next != NULL) {
         aixos_list_del(&tcb->ready_node);
+#if AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_BITMAP
         if (aixos_list_is_empty(&ready_queues[old_priority])) {
             ready_bitmap[old_priority / 64] &= ~(UINT64_C(1) << ((unsigned int)old_priority % 64));
         }
+#endif
         aixos_sched_add_task(tcb);
     }
 }
 
 void aixos_sched_rotate_current(void)
 {
+#if AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_BITMAP
     aixos_list_t *head;
+#endif
     if (g_cur_task == NULL || g_cur_task->ready_node.next == NULL) {
         return;
     }
+#if AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_BITMAP
     head = &ready_queues[g_cur_task->priority];
     if (head->next != head->prev) {
         aixos_list_del(&g_cur_task->ready_node);
         aixos_list_add_tail(&g_cur_task->ready_node, head);
     }
+#elif AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_SIMPLE
+    if (g_cur_task->ready_node.next != &ready_list) {
+        aixos_tcb_t *next =
+            AIXOS_CONTAINER_OF(g_cur_task->ready_node.next,
+                               aixos_tcb_t, ready_node);
+        if (next->priority == g_cur_task->priority) {
+            aixos_list_del(&g_cur_task->ready_node);
+            sched_simple_insert_after_same_priority(g_cur_task);
+        }
+    }
+#endif
 }
 
 static aixos_tcb_t *sched_find_highest(void)
 {
+#if AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_BITMAP
     int word;
     int highest;
     aixos_list_t *node;
 
-    /* Scan bitmap from highest priority word (word 3 = priorities 192-255) down */
-    for (word = 3; word >= 0; word--) {
+    for (word = (int)((AIXOS_CFG_MAX_PRIORITY + 63) / 64) - 1;
+         word >= 0; word--) {
         if (ready_bitmap[word] != 0U) {
             highest = (word * 64) + (63 - __builtin_clzll(ready_bitmap[word]));
+            if (highest >= AIXOS_CFG_MAX_PRIORITY) {
+                highest = AIXOS_CFG_MAX_PRIORITY - 1;
+            }
             node = aixos_list_first(&ready_queues[highest]);
             return AIXOS_CONTAINER_OF(node, aixos_tcb_t, ready_node);
         }
     }
+#elif AIXOS_CFG_SCHEDULER == AIXOS_CFG_SCHED_SIMPLE
+    aixos_list_t *node;
+    if (!aixos_list_is_empty(&ready_list)) {
+        node = aixos_list_first(&ready_list);
+        return AIXOS_CONTAINER_OF(node, aixos_tcb_t, ready_node);
+    }
+#endif
     return NULL;
 }
 

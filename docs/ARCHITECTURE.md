@@ -49,12 +49,22 @@ The scheduler uses:
 
 - Fixed integer priorities.
 - Configurable time slicing through `AIXOS_CFG_TIME_SLICE_TICKS`.
+- Compile-time selectable ready-queue backend through `AIXOS_CFG_SCHEDULER`.
 - Explicit task states: ready, running, blocked, delayed, suspended, and stop.
 - Timeout wait nodes for sleep and blocking IPC.
 - Priority inheritance for mutex ownership.
 
 The idle task must remain at priority `0`. The timer service task priority is
 configured by `AIXOS_CFG_TIMER_TASK_PRIORITY`.
+
+Two scheduler backends coexist:
+
+- `AIXOS_CFG_SCHED_BITMAP`: one FIFO ready queue per priority plus a bitmap of
+  non-empty priorities. This is the default deterministic path and favors
+  larger runnable sets.
+- `AIXOS_CFG_SCHED_SIMPLE`: a single priority-sorted ready list inspired by
+  Zephyr's simple scheduler option. It favors small runnable sets and reduced
+  memory footprint; priority insertion and requeue scan the ready list.
 
 ## Handle and Object Model
 
