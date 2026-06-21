@@ -93,6 +93,23 @@
 #define AIXOS_CFG_CPU_CLOCK_HZ           72000000U
 #endif
 
+/* ── 中断响应与嵌套 ──────────────────────────── */
+#ifndef AIXOS_CFG_KERNEL_IRQ_PRIORITY
+#define AIXOS_CFG_KERNEL_IRQ_PRIORITY    0x40U
+#endif
+#ifndef AIXOS_CFG_SYSTICK_IRQ_PRIORITY
+#define AIXOS_CFG_SYSTICK_IRQ_PRIORITY   AIXOS_CFG_KERNEL_IRQ_PRIORITY
+#endif
+#ifndef AIXOS_CFG_PENDSV_IRQ_PRIORITY
+#define AIXOS_CFG_PENDSV_IRQ_PRIORITY    0xF0U
+#endif
+#ifndef AIXOS_CFG_ISR_NESTING_MAX
+#define AIXOS_CFG_ISR_NESTING_MAX        8U
+#endif
+#ifndef AIXOS_CFG_ISR_NESTING_PANIC
+#define AIXOS_CFG_ISR_NESTING_PANIC      0
+#endif
+
 /* ── 栈大小 ──────────────────────────────────── */
 #ifndef AIXOS_CFG_IDLE_STACK_SIZE
 #define AIXOS_CFG_IDLE_STACK_SIZE       256      /* Idle 任务栈 (uint32_t 数量) */
@@ -212,6 +229,28 @@
 
 #if AIXOS_CFG_TIME_SLICE_TICKS == 0
 #error "Time slice must be at least one tick"
+#endif
+
+#if AIXOS_CFG_KERNEL_IRQ_PRIORITY == 0 || \
+    AIXOS_CFG_KERNEL_IRQ_PRIORITY > 0xFFU
+#error "Kernel IRQ priority threshold must be in [1, 255]"
+#endif
+
+#if AIXOS_CFG_SYSTICK_IRQ_PRIORITY > 0xFFU || \
+    AIXOS_CFG_PENDSV_IRQ_PRIORITY > 0xFFU
+#error "Cortex-M exception priorities must fit in 8 bits"
+#endif
+
+#if AIXOS_CFG_SYSTICK_IRQ_PRIORITY < AIXOS_CFG_KERNEL_IRQ_PRIORITY
+#error "SysTick priority must be maskable by the kernel IRQ threshold"
+#endif
+
+#if AIXOS_CFG_PENDSV_IRQ_PRIORITY < AIXOS_CFG_SYSTICK_IRQ_PRIORITY
+#error "PendSV priority must be no more urgent than SysTick"
+#endif
+
+#if AIXOS_CFG_ISR_NESTING_MAX == 0 || AIXOS_CFG_ISR_NESTING_MAX > 255U
+#error "ISR nesting max must be in [1, 255]"
 #endif
 
 #if AIXOS_CFG_MIN_TASK_STACK_SIZE < 192

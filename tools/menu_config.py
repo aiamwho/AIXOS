@@ -20,6 +20,9 @@ ITEMS = [
     ("AIXOS_CFG_MAX_PRIORITY", "Priority levels", "int"),
     ("AIXOS_CFG_HEAP_SIZE", "Heap size bytes", "heap"),
     ("AIXOS_CFG_TIME_SLICE_TICKS", "Round-robin time slice ticks", "int"),
+    ("AIXOS_CFG_KERNEL_IRQ_PRIORITY", "Kernel IRQ BASEPRI threshold", "int"),
+    ("AIXOS_CFG_ISR_NESTING_MAX", "ISR nesting max", "int"),
+    ("AIXOS_CFG_ISR_NESTING_PANIC", "Panic on ISR nesting overflow", "bool"),
 ]
 
 DEFAULTS = {
@@ -34,6 +37,9 @@ DEFAULTS = {
     "AIXOS_CFG_MAX_PRIORITY": "256",
     "AIXOS_CFG_HEAP_SIZE": "(7 * 1024)",
     "AIXOS_CFG_TIME_SLICE_TICKS": "1",
+    "AIXOS_CFG_KERNEL_IRQ_PRIORITY": "0x40U",
+    "AIXOS_CFG_ISR_NESTING_MAX": "8U",
+    "AIXOS_CFG_ISR_NESTING_PANIC": "0",
 }
 
 
@@ -96,6 +102,15 @@ def write(values):
         "#endif",
         "#ifndef AIXOS_CFG_TIME_SLICE_TICKS",
         f"#define AIXOS_CFG_TIME_SLICE_TICKS      {values['AIXOS_CFG_TIME_SLICE_TICKS']}",
+        "#endif",
+        "#ifndef AIXOS_CFG_KERNEL_IRQ_PRIORITY",
+        f"#define AIXOS_CFG_KERNEL_IRQ_PRIORITY   {values['AIXOS_CFG_KERNEL_IRQ_PRIORITY']}",
+        "#endif",
+        "#ifndef AIXOS_CFG_ISR_NESTING_MAX",
+        f"#define AIXOS_CFG_ISR_NESTING_MAX       {values['AIXOS_CFG_ISR_NESTING_MAX']}",
+        "#endif",
+        "#ifndef AIXOS_CFG_ISR_NESTING_PANIC",
+        f"#define AIXOS_CFG_ISR_NESTING_PANIC     {values['AIXOS_CFG_ISR_NESTING_PANIC']}",
         "#endif",
         "",
         "#endif /* AIXOS_USER_CFG_H */",

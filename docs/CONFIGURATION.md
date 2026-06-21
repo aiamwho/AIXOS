@@ -52,6 +52,28 @@ margin for diagnostics and recovery paths.
 Changing tick frequency affects timeout resolution, timer callback latency,
 CPU overhead, and test expectations.
 
+## Interrupt Response
+
+| Macro | Purpose |
+|---|---|
+| `AIXOS_CFG_KERNEL_IRQ_PRIORITY` | Cortex-M `BASEPRI` threshold used by kernel critical sections |
+| `AIXOS_CFG_SYSTICK_IRQ_PRIORITY` | SysTick exception priority; must be maskable by the kernel threshold |
+| `AIXOS_CFG_PENDSV_IRQ_PRIORITY` | PendSV exception priority; must be no more urgent than SysTick |
+| `AIXOS_CFG_ISR_NESTING_MAX` | Software-supported ISR nesting budget before recording an overflow |
+| `AIXOS_CFG_ISR_NESTING_PANIC` | Escalates ISR nesting overflow to `aixos_panic()` when enabled |
+
+The default Cortex-M3 threshold is `0x40`. Interrupts with a numerically lower
+priority value, such as `0x00` through `0x30` on common STM32F103-style
+4-bit-priority parts, can preempt kernel critical sections and provide a
+high-response lane. Those high-response ISRs must not call AIXOS kernel APIs;
+they should clear hardware status, copy minimal data into a lock-free/product
+owned buffer, and defer RTOS interaction to a lower-priority interrupt or task.
+
+The default `AIXOS_CFG_ISR_NESTING_MAX` is `8`, which is a software diagnostic
+budget, not a hardware proof. Product firmware must size the interrupt stack
+from worst-case exception frames and compiler-saved registers, then adjust this
+limit to match the validated stack budget.
+
 ## Scheduler Backend
 
 | Macro | Value | Purpose |

@@ -1,8 +1,10 @@
+#include "config/aixos_cfg.h"
+
 .syntax unified
 .cpu    cortex-m3
 .thumb
 
-.equ KERNEL_PRIORITY_THRESHOLD, 0x40
+.equ KERNEL_PRIORITY_THRESHOLD, AIXOS_CFG_KERNEL_IRQ_PRIORITY
 
 .global aixos_arch_int_disable
 .global aixos_arch_int_restore

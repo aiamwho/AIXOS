@@ -197,6 +197,15 @@ public handle format uses an 8-bit slot index.
 Only call APIs documented as `*_from_isr` or explicitly ISR-safe from interrupt
 context. ISR paths must not block.
 
+On Cortex-M3, priorities numerically lower than `AIXOS_CFG_KERNEL_IRQ_PRIORITY`
+are reserved for high-response interrupt work that can preempt kernel critical
+sections. These handlers may use the board/architecture ISR wrapper for nesting
+accounting, but must not call AIXOS service APIs because the kernel protects its
+data structures with `BASEPRI` at that threshold. Keep those handlers to
+hardware acknowledgement, timestamping, and minimal product-owned buffering;
+defer semaphore, queue, pipe, notification, and scheduling handoff to an IRQ at
+or below the kernel threshold or to a task.
+
 Typical ISR handoff:
 
 ```c

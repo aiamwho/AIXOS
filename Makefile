@@ -45,7 +45,8 @@ ARM_C_SRCS := $(COMMON_SRCS) arch/arm/cortex-m3/port.c $(APP_SRCS)
 ARM_S_SRCS := arch/arm/cortex-m3/startup_stm32f103.s arch/arm/cortex-m3/portasm.s
 ARM_OBJS := $(addprefix $(ARM_BUILD)/,$(ARM_C_SRCS:.c=.o) $(ARM_S_SRCS:.s=.o))
 ARM_CFLAGS := $(COMMON_CFLAGS) $(ARM_MCU) -Os
-ARM_ASFLAGS := $(ARM_MCU) -Wall
+ARM_ASFLAGS := $(COMMON_INCLUDES) $(CONFIG_CFLAGS) $(ARM_MCU) -Wall \
+	-x assembler-with-cpp
 ARM_LDFLAGS := -EL --gc-sections -Map=$(ARM_BUILD)/$(TARGET).map \
 	-T arch/arm/cortex-m3/link.ld
 ARM_LIBGCC := $(shell $(ARM_CC) $(ARM_MCU) -print-libgcc-file-name 2>/dev/null)

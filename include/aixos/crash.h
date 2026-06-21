@@ -3,6 +3,8 @@
 
 #include "aixos/types.h"
 
+#define AIXOS_CRASH_REASON_ISR_NESTING_OVERFLOW UINT32_C(0x4953524F) /* ISRO */
+
 void aixos_crash_record_store(uint32_t architecture, uint32_t reason,
                               uint32_t program_counter,
                               uint32_t fault_address,

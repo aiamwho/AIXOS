@@ -51,6 +51,10 @@ void aixos_arch_mpu_configure_task(const struct aixos_tcb *task);
 void aixos_isr_enter(void);
 void aixos_isr_exit(void);
 int aixos_in_isr(void);
+uint32_t aixos_isr_nesting_level(void);
+uint32_t aixos_isr_nesting_high_watermark(void);
+uint32_t aixos_isr_nesting_overflow_count(void);
+void aixos_isr_stats_reset(void);
 void aixos_reschedule_request(void);
 
 #if defined(__riscv)

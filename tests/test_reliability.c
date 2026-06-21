@@ -44,6 +44,7 @@ void test_reliability_guards(void)
     size_t output_size = 0U;
     char formatted[64];
     const aixos_crash_record_t *crash;
+    uint32_t i;
 
     aixos_heap_init(NULL, 0);
     aixos_object_init();
@@ -72,6 +73,49 @@ void test_reliability_guards(void)
     }
     aixos_crash_record_clear();
     CHECK(aixos_crash_record_get() == NULL);
+
+    aixos_isr_stats_reset();
+    CHECK(aixos_isr_nesting_level() == 0U);
+    CHECK(aixos_isr_nesting_high_watermark() == 0U);
+    CHECK(aixos_isr_nesting_overflow_count() == 0U);
+    aixos_isr_enter();
+    CHECK(aixos_in_isr());
+    CHECK(aixos_isr_nesting_level() == 1U);
+    aixos_isr_enter();
+    CHECK(aixos_isr_nesting_level() == 2U);
+    CHECK(aixos_isr_nesting_high_watermark() == 2U);
+    aixos_test_switch_requests_reset();
+    aixos_reschedule_request();
+    CHECK(aixos_test_switch_requests_get() == 0U);
+    aixos_isr_exit();
+    CHECK(aixos_test_switch_requests_get() == 0U);
+    aixos_isr_exit();
+    CHECK(aixos_test_switch_requests_get() == 1U);
+    CHECK(aixos_isr_nesting_level() == 0U);
+#if !AIXOS_CFG_ISR_NESTING_PANIC && AIXOS_CFG_ISR_NESTING_MAX <= 32U
+    aixos_crash_record_clear();
+    aixos_isr_stats_reset();
+    for (i = 0U; i <= AIXOS_CFG_ISR_NESTING_MAX; i++) {
+        aixos_isr_enter();
+    }
+    CHECK(aixos_isr_nesting_level() == AIXOS_CFG_ISR_NESTING_MAX + 1U);
+    CHECK(aixos_isr_nesting_high_watermark() ==
+          AIXOS_CFG_ISR_NESTING_MAX + 1U);
+    CHECK(aixos_isr_nesting_overflow_count() == 1U);
+    crash = aixos_crash_record_get();
+    CHECK(crash != NULL);
+    if (crash != NULL) {
+        CHECK(crash->reason == AIXOS_CRASH_REASON_ISR_NESTING_OVERFLOW);
+        CHECK(crash->fault_status == AIXOS_CFG_ISR_NESTING_MAX + 1U);
+        CHECK(crash->fault_status2 == AIXOS_CFG_ISR_NESTING_MAX);
+    }
+    for (i = 0U; i <= AIXOS_CFG_ISR_NESTING_MAX; i++) {
+        aixos_isr_exit();
+    }
+    CHECK(aixos_isr_nesting_level() == 0U);
+    aixos_crash_record_clear();
+    aixos_isr_stats_reset();
+#endif
 
     static_task = aixos_task_create("static", dummy_task, NULL, 256, 3);
     CHECK(static_task != AIXOS_HANDLE_INVALID);

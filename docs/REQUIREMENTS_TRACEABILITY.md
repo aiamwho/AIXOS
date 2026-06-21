@@ -74,6 +74,7 @@ Status values:
 |---|---|---|---|---|
 | REQ-ARM-001 | Cortex-M3 port shall build with warnings as errors. | `arch/arm/cortex-m3/` | `make arm` | Covered |
 | REQ-ARM-002 | Cortex-M3 Renode smoke shall show ticking and runnable tasks. | `arch/arm/cortex-m3/`, `tests/renode_cortexm3.robot` | `make renode` | Partial |
+| REQ-IRQ-001 | ISR nesting accounting shall be atomic, bounded by configuration, and defer scheduling until the outermost ISR exits. | `kernel/isr.c`, `arch/arm/cortex-m3/portasm.s` | `tests/test_reliability.c`, `make test`, `make arm` | Covered |
 | REQ-RV-001 | RV32IM port shall build as ELF32 RISC-V and expose trap/heartbeat symbols. | `arch/risc-v/` | `make riscv-validate RISCV_PREFIX=riscv64-elf-` | Covered |
 | REQ-RV-002 | RISC-V trap frames shall preserve x1-x31, `mepc`, and `mstatus`. | `arch/risc-v/portasm.s`, `examples/smoke/main.c` | `tests/renode_riscv.robot` | Partial |
 

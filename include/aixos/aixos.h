@@ -3,6 +3,7 @@
 #include "aixos/version.h"
 #include "aixos/types.h"
 #include "aixos/abi.h"
+#include "aixos/arch/arch.h"
 #include "aixos/task.h"
 #include "aixos/sem.h"
 #include "aixos/mutex.h"

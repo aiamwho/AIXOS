@@ -79,6 +79,21 @@ aixos_handle_t task = aixos_task_create_static("worker", worker, NULL,
 
 Do not call blocking APIs while the scheduler is locked.
 
+## ISR Diagnostics
+
+| API | Use |
+|---|---|
+| `aixos_in_isr()` | Return whether the kernel is currently inside ISR context |
+| `aixos_isr_nesting_level()` | Return current ISR nesting level |
+| `aixos_isr_nesting_high_watermark()` | Return highest observed ISR nesting level |
+| `aixos_isr_nesting_overflow_count()` | Return nesting limit overflow count |
+| `aixos_isr_stats_reset()` | Reset ISR high-water and overflow counters when not inside ISR |
+
+`aixos_isr_enter()` and `aixos_isr_exit()` are architecture/IRQ wrapper hooks.
+Board integration wrappers should call them for nesting accounting. Application
+ISR code must not treat them as permission to call RTOS service APIs from
+priorities above the kernel `BASEPRI` threshold.
+
 ## Semaphore APIs
 
 | API | Use |

@@ -58,6 +58,11 @@ Architecture ports must support the public context matrix in
 - Task-only APIs must reject ISR context.
 - FromISR APIs must not block.
 - Critical sections must restore the previous interrupt state.
+- If a port supports interrupts above the kernel critical-section mask, document
+  that those high-response ISRs are outside the kernel API-safe priority range.
+- ISR nesting accounting must be atomic with respect to higher-priority
+  interrupt preemption and must preserve deferred scheduling until the outermost
+  ISR exits.
 
 ## Linker Script Requirements
 

@@ -162,8 +162,9 @@ void aixos_arch_system_init(void)
     SYSTICK_CVR = 0;
     SYSTICK_CSR = 0;
 
-    /* PendSV lowest, SysTick below kernel critical-section threshold. */
-    NVIC_SHPR3 = (0xF0U << 16) | (0x40U << 24);
+    /* PendSV lowest, SysTick remains maskable by the BASEPRI threshold. */
+    NVIC_SHPR3 = (AIXOS_CFG_PENDSV_IRQ_PRIORITY << 16) |
+                 (AIXOS_CFG_SYSTICK_IRQ_PRIORITY << 24);
     SCB_SHCSR |= SCB_SHCSR_FAULT_ENABLE;
     aixos_arch_mpu_configure_task(NULL);
 }

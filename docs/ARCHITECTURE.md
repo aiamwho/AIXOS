@@ -154,3 +154,23 @@ New ports must implement the architecture interface in
 `arch/include/aixos/arch/arch.h`, provide startup code, supply a linker script,
 and preserve scheduler and interrupt semantics documented in
 `docs/PORTING_GUIDE.md`.
+
+### Cortex-M Interrupt Model
+
+The Cortex-M3 port uses `BASEPRI` for kernel critical sections instead of
+globally masking all interrupts. `AIXOS_CFG_KERNEL_IRQ_PRIORITY` defaults to
+`0x40`; interrupts configured with a numerically lower priority remain able to
+preempt the kernel critical section path. SysTick defaults to the same priority
+as the kernel threshold and PendSV defaults to `0xF0`, so context switching stays
+deferred behind normal interrupt work.
+
+ISR entry and exit maintain an atomic nesting counter. Rescheduling requested
+from ISR context is deferred until the outermost ISR exits. The kernel also
+tracks a high-watermark and records a crash record with reason
+`AIXOS_CRASH_REASON_ISR_NESTING_OVERFLOW` when nesting exceeds
+`AIXOS_CFG_ISR_NESTING_MAX`.
+
+High-response ISRs above the kernel threshold are outside the kernel
+service-API-safe zone. They may enter through the board/architecture ISR wrapper
+for nesting accounting, but must not call AIXOS services, including
+`*_from_isr`; use a lower-priority IRQ or task handoff for RTOS interaction.

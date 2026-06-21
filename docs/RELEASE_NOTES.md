@@ -33,6 +33,10 @@ visualization work prepared in the v0.9 baseline.
 - `make config` terminal menu for customer-facing kernel裁剪.
 - Selectable scheduler backend: default bitmap multi-queue or simple sorted
   ready list for small-system footprint optimization.
+- Configurable Cortex-M3 kernel IRQ priority threshold for high-response ISR
+  deployments.
+- Atomic ISR nesting accounting with high-watermark diagnostics, configurable
+  nesting budget, and crash-record overflow reporting.
 - `tools/scheduler_benchmark.py` for Cortex-M3 scheduler size/instruction
   comparison.
 - Requirement-to-test traceability matrix.
