@@ -1,0 +1,20 @@
+mach create
+machine LoadPlatformDescription @simulation/stm32f103.repl
+sysbus LoadELF @build/AIXOS.elf
+start
+sleep 5
+log "BEFORE_FORCE"
+sysbus ReadDoubleWord 0x20000550
+# Manually set SysTick interrupt pending in ICSR
+# Not possible directly, but we can write NVIC_STIR to trigger an exception
+# Actually SysTick is exception #15, NVIC_ISPR doesn't control it.
+# Let's try writing directly to the NVIC ISPR for IRQ #0 equivalent
+# Or better: just use the `cpu` command to manually invoke the handler
+log "AFTER_5MS"
+sysbus ReadDoubleWord 0x20000550
+sleep 50
+log "AFTER_50MS"
+sysbus ReadDoubleWord 0x20000550
+sysbus ReadDoubleWord 0xE000E010
+cpu PC
+quit

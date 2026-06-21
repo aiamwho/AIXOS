@@ -1,0 +1,23 @@
+.DS_Store
+
+# Build and verification output
+/build/
+/test-results/
+/build/reports/
+
+# Machine-local Renode state
+/tools/renode.config.lock
+
+# Coverage and sanitizer output
+*.profraw
+*.profdata
+*.gcda
+*.gcno
+toolchain-report.txt
+analysis-output/
+deliverables/
+outputs/
+
+# Editor and temporary files
+*.swp
+*~

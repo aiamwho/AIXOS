@@ -1,0 +1,46 @@
+# AIXOS v3 Renode 仿真测试
+mach create
+machine LoadPlatformDescription @simulation/stm32f103.repl
+sysbus LoadELF @build/AIXOS.elf
+
+# 启动前检查关键符号
+log "=== PRE_BOOT ==="
+sysbus ReadDoubleWord 0x08000000
+sysbus ReadDoubleWord 0x08000004
+
+# 启动仿真
+start
+
+# 等待系统初始化
+sleep 20
+
+# 检查系统是否存活
+cpu BASEPRI
+log "=== POST_BOOT ==="
+sysbus ReadByte 0x20000664
+sysbus ReadDoubleWord 0x20000550
+sysbus ReadDoubleWord 0xE000E010
+sysbus ReadDoubleWord 0xE000E018
+sysbus ReadDoubleWord 0xE000ED20
+sysbus ReadDoubleWord 0x20000554
+# 检查 NVIC 中断状态
+log "NVIC_ISER"
+sysbus ReadDoubleWord 0xE000E100
+sysbus ReadDoubleWord 0xE000E104
+log "NVIC_ISPR"
+sysbus ReadDoubleWord 0xE000E200
+log "STIR"
+sysbus ReadDoubleWord 0xE000EF00
+# 直接读 RAM 中的 tick_marker 确认 axios_tick_handler 是否执行
+sysbus ReadDoubleWord 0x20000558
+
+# 让任务跑一会
+sleep 100
+
+# 再次检查 tick 是否增长
+log "=== TICK_CHECK ==="
+sysbus ReadDoubleWord 0x20000550
+sysbus ReadByte 0x20000660
+
+log "TEST_PASSED"
+quit

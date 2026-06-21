@@ -1,0 +1,15 @@
+mach create
+machine LoadPlatformDescription @simulation/stm32f103.repl
+sysbus LoadELF @build/AIXOS.elf
+start
+sleep 5
+sysbus ReadDoubleWord 0x20000550
+# Try to manually force SysTick handler execution
+# Write ICSR to set PendSV bit (0x10000000)
+# This should trigger PendSV if the system is stuck
+sysbus WriteDoubleWord 0xE000ED04 0x10000000
+sleep 2
+sysbus ReadDoubleWord 0x20000550
+sysbus ReadDoubleWord 0x20000554
+cpu PC
+quit

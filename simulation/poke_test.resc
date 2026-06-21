@@ -1,0 +1,19 @@
+mach create
+machine LoadPlatformDescription @simulation/stm32f103.repl
+sysbus LoadELF @build/AIXOS.elf
+# Check before start
+sysbus ReadDoubleWord 0xE000E010
+start
+sleep 5
+# Check after 5ms
+sysbus ReadDoubleWord 0xE000E010
+sysbus ReadDoubleWord 0xE000E014
+sysbus ReadDoubleWord 0xE000E018
+sysbus ReadDoubleWord 0xE000ED20
+sysbus ReadDoubleWord 0x20000550
+sleep 2
+sysbus ReadDoubleWord 0xE000E010
+# Force-write the ICSR PendSTSET to trigger PendSV directly, if system is stuck
+# write value 0x10000000 to 0xE000ED04 to pend PendSV
+sysbus ReadDoubleWord 0x20000550
+quit

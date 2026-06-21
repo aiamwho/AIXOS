@@ -1,0 +1,12 @@
+dram: Memory.MappedMemory @ sysbus 0x80000000
+    size: 0x04000000
+
+cpu: CPU.RiscV32 @ sysbus
+    cpuType: "rv32imac_zicsr_zifencei"
+    privilegedArchitecture: PrivilegedArchitecture.Priv1_10
+    timeProvider: clint
+    hartId: 0
+
+clint: IRQControllers.CoreLevelInterruptor @ sysbus 0x02000000
+    [0,1] -> cpu@[3,7]
+    frequency: 10000000

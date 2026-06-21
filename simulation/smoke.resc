@@ -1,0 +1,15 @@
+mach create
+machine LoadPlatformDescription @simulation/stm32f103.repl
+sysbus LoadELF @build/arm/AIXOS.elf
+start
+sleep 20
+log "AIXOS_V4_SMOKE_SAMPLE_1"
+sysbus ReadDoubleWord 0x200041C0
+sysbus ReadDoubleWord 0x20000578
+cpu PC
+sleep 20
+log "AIXOS_V4_SMOKE_SAMPLE_2"
+sysbus ReadDoubleWord 0x200041C0
+sysbus ReadDoubleWord 0x20000578
+cpu PC
+quit

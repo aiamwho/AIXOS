@@ -1,0 +1,43 @@
+#!/usr/bin/expect -f
+
+if {$argc < 5 || (($argc - 4) % 2) != 0} {
+    puts stderr "usage: renode_metrics.exp config platform elf duration name symbol ..."
+    exit 2
+}
+
+set config [lindex $argv 0]
+set platform [lindex $argv 1]
+set elf [lindex $argv 2]
+set duration [lindex $argv 3]
+set timeout 30
+
+spawn renode --plain --console --disable-xwt --config $config
+expect -re {\(monitor\)}
+send -- "mach create\r"
+expect -re {\(machine-0\)}
+send -- "machine LoadPlatformDescription @$platform\r"
+expect -re {\(machine-0\)}
+send -- "sysbus LoadELF @$elf\r"
+expect -re {\(machine-0\)}
+send -- "emulation RunFor \"$duration\"\r"
+expect -re {\(machine-0\)}
+
+for {set i 4} {$i < $argc} {incr i 2} {
+    set name [lindex $argv $i]
+    set symbol [lindex $argv [expr {$i + 1}]]
+    send -- "sysbus ReadDoubleWord `sysbus GetSymbolAddress \"$symbol\"`\r"
+    expect {
+        -re {0x([0-9A-Fa-f]{8})} {
+            scan $expect_out(1,string) %x value
+            puts "METRIC $name $value"
+        }
+        timeout {
+            puts stderr "timeout reading $symbol"
+            exit 3
+        }
+    }
+    expect -re {\(machine-0\)}
+}
+
+send -- "quit\r"
+expect eof

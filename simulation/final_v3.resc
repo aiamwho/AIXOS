@@ -1,0 +1,14 @@
+mach create
+machine LoadPlatformDescription @simulation/stm32f103.repl
+sysbus LoadELF @build/AIXOS.elf
+start
+sleep 20
+sysbus ReadDoubleWord 0x20000550
+sysbus ReadDoubleWord 0x20000554
+sysbus ReadDoubleWord 0x2000054c
+sysbus ReadByte 0x20000664
+sysbus ReadDoubleWord 0xE000E010
+sleep 50
+sysbus ReadDoubleWord 0x20000550
+sysbus ReadDoubleWord 0x2000054c
+quit
