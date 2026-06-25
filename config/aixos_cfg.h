@@ -35,6 +35,15 @@
 #define AIXOS_CFG_SCHEDULER             AIXOS_CFG_SCHED_BITMAP
 #endif
 
+#define AIXOS_CFG_PLATFORM_CORTEX_M0    1
+#define AIXOS_CFG_PLATFORM_CORTEX_M3    2
+#define AIXOS_CFG_PLATFORM_CORTEX_M4    3
+#define AIXOS_CFG_PLATFORM_CORTEX_M33   4
+#define AIXOS_CFG_PLATFORM_CORTEX_A55   5
+#ifndef AIXOS_CFG_PLATFORM
+#define AIXOS_CFG_PLATFORM              AIXOS_CFG_PLATFORM_CORTEX_M3
+#endif
+
 /* ── 对象池大小 ──────────────────────────────── */
 #ifndef AIXOS_CFG_TASK_HANDLE_LIMIT
 #define AIXOS_CFG_TASK_HANDLE_LIMIT     256      /* 32-bit handle index capacity */
@@ -200,6 +209,14 @@
 #error "AIXOS_CFG_SCHEDULER must be AIXOS_CFG_SCHED_BITMAP or AIXOS_CFG_SCHED_SIMPLE"
 #endif
 
+#if AIXOS_CFG_PLATFORM != AIXOS_CFG_PLATFORM_CORTEX_M0 && \
+    AIXOS_CFG_PLATFORM != AIXOS_CFG_PLATFORM_CORTEX_M3 && \
+    AIXOS_CFG_PLATFORM != AIXOS_CFG_PLATFORM_CORTEX_M4 && \
+    AIXOS_CFG_PLATFORM != AIXOS_CFG_PLATFORM_CORTEX_M33 && \
+    AIXOS_CFG_PLATFORM != AIXOS_CFG_PLATFORM_CORTEX_A55
+#error "AIXOS_CFG_PLATFORM must select one supported platform"
+#endif
+
 #if AIXOS_CFG_IDLE_PRIORITY != 0
 #error "The current scheduler requires idle priority 0"
 #endif
@@ -343,16 +360,24 @@
 #define AIXOS_CFG_SIGNAL_QUEUE_DEPTH   8       /* 信号队列深度 */
 #define AIXOS_CFG_MAX_SIGNAL_HANDLERS  32      /* 最大信号处理函数数 */
 
-#if AIXOS_CFG_ENABLE_MPU && AIXOS_CFG_MPU_REGIONS_PER_TASK == 0
+#if AIXOS_CFG_ENABLE_MPU && \
+    (AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M3 || \
+     AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M4) && \
+    AIXOS_CFG_MPU_REGIONS_PER_TASK == 0
 #error "MPU must provide at least one per-task region"
 #endif
 
-#if AIXOS_CFG_ENABLE_MPU && AIXOS_CFG_MPU_REGIONS_PER_TASK > 3
+#if AIXOS_CFG_ENABLE_MPU && \
+    (AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M3 || \
+     AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M4) && \
+    AIXOS_CFG_MPU_REGIONS_PER_TASK > 3
 #error "Portable MPU profile supports at most three per-task regions"
 #endif
 
-#if AIXOS_CFG_MPU_MIN_REGION_SIZE < 32U || \
-    (AIXOS_CFG_MPU_MIN_REGION_SIZE & (AIXOS_CFG_MPU_MIN_REGION_SIZE - 1U)) != 0U
+#if (AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M3 || \
+     AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M4) && \
+    (AIXOS_CFG_MPU_MIN_REGION_SIZE < 32U || \
+    (AIXOS_CFG_MPU_MIN_REGION_SIZE & (AIXOS_CFG_MPU_MIN_REGION_SIZE - 1U)) != 0U)
 #error "MPU minimum region size must be a power of two and at least 32 bytes"
 #endif
 

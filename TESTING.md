@@ -12,10 +12,14 @@ and release qualification. Commands are run from the package root.
 | MPU focused test | `make test-mpu` | Runs only MPU region and user-memory access checks |
 | Host sanitizer tests | `make test-asan` | Runs host tests with ASan and UBSan |
 | Host optimization variants | `make test-o2`, `make test-os` | Runs host tests with alternate optimization levels |
-| Cortex-M3 build | `make arm` | Builds strict Cortex-M3 firmware |
+| ARM Cortex-M build | `make arm` | Builds the selected Cortex-M platform from `make config` or `AIXOS_PLATFORM` |
+| Cortex-A55 build | `make arm AIXOS_PLATFORM=cortex-a55` | Builds and links the AArch64 ELF |
+| ARM Cortex platform load check | `make renode-arm-platform-check` | Verifies Renode can load M0/M3/M4/M33/A55 platform descriptions |
 | RV32IM build | `make riscv` | Builds strict RISC-V firmware |
 | RV32IM ELF validation | `make riscv-validate` | Verifies ELF architecture and required symbols |
-| Cortex-M3 simulation | `make renode` | Runs Renode heartbeat and tick checks |
+| ARM Cortex-M simulation | `make renode` | Runs Renode heartbeat and tick checks for the selected Cortex-M platform |
+| ARM Cortex simulation | `make renode-arm-smoke` | Runs M0/M3/M4/M33/A55 Renode heartbeat and tick checks |
+| Cortex-A55 instruction smoke | `make instruction-sim` | Runs A55 Renode instruction-level heartbeat, tick, user, and error metrics |
 | RV32IM simulation | `make renode-riscv` | Runs Renode heartbeat, tick, trap, and register checks |
 | RV32IM stress simulation | `make renode-riscv-stress` | Repeats the RISC-V Renode test five times |
 | Static analysis | `make analyze` | Runs Clang static analysis |
@@ -59,6 +63,8 @@ The customer release qualification should include these behaviors:
 - Cortex-M3 PendSV reads `stack_top` at TCB offset zero.
 - RISC-V trap frames preserve x1-x31, `mepc`, and `mstatus` with 16-byte stack
   alignment.
+- Renode platform descriptions for Cortex-M0, Cortex-M3, Cortex-M4,
+  Cortex-M33, and Cortex-A55 load without platform-description errors.
 
 ## Customer Release Criteria
 
@@ -116,6 +122,10 @@ be added per target.
 - Full IPC and timing interleavings require Renode and hardware tests.
 - Physical-board validation is product-specific and not included in this source
   package.
+- Cortex-A55 Renode checks validate platform load, AArch64 ELF loading,
+  GIC/generic-timer ticks, kernel heartbeat, user task heartbeat, and zero user
+  syscall errors. Hardware interrupt latency and cache/MMU behavior still need
+  board-specific validation.
 - The RISC-V toolchain can be supplied through `RISCV_TOOLCHAIN_DIR`.
 - Renode availability depends on the local Renode installation and robot-server
   configuration.

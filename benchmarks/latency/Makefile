@@ -37,15 +37,20 @@ ARM_CC := $(ARM_PREFIX)gcc
 ARM_SIZE := $(ARM_PREFIX)size
 
 RISCV_TOOLCHAIN_DIR ?=
-RISCV_PREFIX ?= riscv-none-elf-
+RISCV_PREFIX ?= $(if $(shell command -v riscv-none-elf-gcc 2>/dev/null),riscv-none-elf-,$(if $(shell command -v riscv64-elf-gcc 2>/dev/null),riscv64-elf-,riscv-none-elf-))
 RISCV_BIN := $(if $(RISCV_TOOLCHAIN_DIR),$(RISCV_TOOLCHAIN_DIR)/bin/,)
 RISCV_CC := $(RISCV_BIN)$(RISCV_PREFIX)gcc
 RISCV_SIZE := $(RISCV_BIN)$(RISCV_PREFIX)size
 
-ARM_SRCS := $(COMMON_SRCS) main.c \
-	$(ROOT)/arch/arm/cortex-m3/port.c \
+ARM_C_SRCS := $(COMMON_SRCS) main.c \
+	$(ROOT)/arch/arm/cortex-m3/port.c
+ARM_S_SRCS := \
 	$(ROOT)/arch/arm/cortex-m3/startup_stm32f103.s \
 	$(ROOT)/arch/arm/cortex-m3/portasm.s
+ARM_SRCS := $(ARM_C_SRCS) $(ARM_S_SRCS)
+ARM_AS_OBJS := \
+	$(BUILD)/arm/startup_stm32f103.o \
+	$(BUILD)/arm/portasm.o
 
 RISCV_SRCS := $(COMMON_SRCS) main.c \
 	$(ROOT)/arch/risc-v/port.c \
@@ -60,9 +65,16 @@ riscv: $(BUILD)/riscv/AIXOS-latency.elf
 
 $(BUILD)/arm/AIXOS-latency.elf: $(ARM_SRCS)
 	@mkdir -p $(dir $@)
+	$(ARM_CC) $(CFLAGS) -mcpu=cortex-m3 -mthumb -x assembler-with-cpp \
+		-c -o $(BUILD)/arm/startup_stm32f103.o \
+		$(ROOT)/arch/arm/cortex-m3/startup_stm32f103.s
+	$(ARM_CC) $(CFLAGS) -mcpu=cortex-m3 -mthumb -x assembler-with-cpp \
+		-c -o $(BUILD)/arm/portasm.o \
+		$(ROOT)/arch/arm/cortex-m3/portasm.s
 	$(ARM_CC) $(CFLAGS) -mcpu=cortex-m3 -mthumb -nostdlib \
 		-Wl,--gc-sections,-Map=$(@:.elf=.map) \
-		-T $(ROOT)/arch/arm/cortex-m3/link.ld -o $@ $(ARM_SRCS) -lgcc
+		-T $(ROOT)/arch/arm/cortex-m3/link.ld -o $@ \
+		$(ARM_C_SRCS) $(ARM_AS_OBJS) -lgcc
 	$(ARM_SIZE) $@
 
 $(BUILD)/riscv/AIXOS-latency.elf: $(RISCV_SRCS)
@@ -74,4 +86,3 @@ $(BUILD)/riscv/AIXOS-latency.elf: $(RISCV_SRCS)
 	$(RISCV_SIZE) $@
 
 .PHONY: all arm riscv
-

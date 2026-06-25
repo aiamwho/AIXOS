@@ -101,11 +101,17 @@ void aixos_arm_fault_handler(uint32_t *frame, uint32_t reason)
     uint32_t cfsr = 0U;
     uint32_t hfsr = 0U;
     uint32_t mmfar = 0U;
-#else
+#elif AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M3 || \
+      AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M4
     uint32_t fault_address = *(volatile uint32_t *)UINT32_C(0xE000ED38);
     uint32_t cfsr = *(volatile uint32_t *)UINT32_C(0xE000ED28);
     uint32_t hfsr = *(volatile uint32_t *)UINT32_C(0xE000ED2C);
     uint32_t mmfar = *(volatile uint32_t *)UINT32_C(0xE000ED34);
+#else
+    uint32_t fault_address = 0U;
+    uint32_t cfsr = 0U;
+    uint32_t hfsr = 0U;
+    uint32_t mmfar = 0U;
 #endif
     /* Controlled reset after recording crash information. */
     aixos_crash_record_store_extended(1U, reason, pc, fault_address,
@@ -129,7 +135,9 @@ void aixos_arm_fault_handler(uint32_t *frame, uint32_t reason)
 void aixos_system_reset(void)
 {
     /* 尝试触发软件复位 */
-#if defined(__arm__) || defined(__thumb__)
+#if defined(__aarch64__)
+    __asm volatile("wfi");
+#elif defined(__arm__) || defined(__thumb__)
     /* ARM: 使用 SCB AIRCR 寄存器 */
     volatile uint32_t *aircr = (volatile uint32_t *)UINT32_C(0xE000ED0C);
     *aircr = 0x05FA0004U;  /* VECTKEY + SYSRESETREQ */

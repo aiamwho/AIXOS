@@ -11,24 +11,43 @@ set elf [lindex $argv 2]
 set duration [lindex $argv 3]
 set timeout 30
 
+proc expect_machine_prompt {} {
+    expect {
+        -re {\(machine-0\)} {}
+        timeout {
+            puts stderr "timeout waiting for Renode monitor prompt"
+            exit 3
+        }
+    }
+}
+
 spawn renode --plain --console --disable-xwt --config $config
 expect -re {\(monitor\)}
 send -- "mach create\r"
-expect -re {\(machine-0\)}
+expect_machine_prompt
 send -- "machine LoadPlatformDescription @$platform\r"
-expect -re {\(machine-0\)}
+expect_machine_prompt
+if {[info exists env(RENODE_ARMV8A_EL1)] && $env(RENODE_ARMV8A_EL1) ne ""} {
+    send -- "cpu SetAvailableExceptionLevels false false\r"
+    expect_machine_prompt
+}
 send -- "sysbus LoadELF @$elf\r"
-expect -re {\(machine-0\)}
+expect_machine_prompt
 send -- "emulation RunFor \"$duration\"\r"
-expect -re {\(machine-0\)}
+expect_machine_prompt
 
 for {set i 4} {$i < $argc} {incr i 2} {
     set name [lindex $argv $i]
     set symbol [lindex $argv [expr {$i + 1}]]
     send -- "sysbus ReadDoubleWord `sysbus GetSymbolAddress \"$symbol\"`\r"
     expect {
-        -re {0x([0-9A-Fa-f]{8})} {
-            scan $expect_out(1,string) %x value
+        -re {\(machine-0\)} {
+            set matches [regexp -all -inline {0x[0-9A-Fa-f]{8}} $expect_out(buffer)]
+            if {[llength $matches] == 0} {
+                puts stderr "no hexadecimal value returned for $symbol"
+                exit 3
+            }
+            scan [lindex $matches end] %x value
             puts "METRIC $name $value"
         }
         timeout {
@@ -36,7 +55,6 @@ for {set i 4} {$i < $argc} {incr i 2} {
             exit 3
         }
     }
-    expect -re {\(machine-0\)}
 }
 
 send -- "quit\r"

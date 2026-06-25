@@ -1,7 +1,7 @@
 # AIXOS v1.0
 
-AIXOS v1.0 is an embedded RTOS kernel package for Cortex-M3, RV32IM, and host
-test builds. The package includes the kernel source, public headers,
+AIXOS v1.0 is an embedded RTOS kernel package for ARM Cortex-M0/M3/M4/M33,
+RV32IM, and host test builds. The package includes the kernel source, public headers,
 configuration, architecture ports, POSIX compatibility layer, tests,
 simulation files, benchmark inputs, and customer-facing development
 documentation.
@@ -16,13 +16,13 @@ not part of the customer deliverable.
 |---|---|
 | `include/aixos/` | Public AIXOS headers and ABI-visible types |
 | `kernel/` | Scheduler, task, heap, timer, trace, crash, object, IPC, and microkernel code |
-| `arch/` | Cortex-M3, RV32IM, and shared architecture interfaces |
+| `arch/` | ARM Cortex-M, Cortex-A55/AArch64, RV32IM, and shared architecture interfaces |
 | `config/` | Build-time configuration defaults |
 | `compat/posix/`, `posix/` | POSIX compatibility implementation and public POSIX headers |
 | `examples/hello_world/` | Minimal first task and UART hook example |
 | `examples/smoke/` | Default smoke-test firmware entry used by `make arm` and `make riscv` |
 | `tests/` | Host and Renode regression tests |
-| `simulation/` | Renode platform and smoke-test scripts |
+| `simulation/` | Renode platform and smoke-test scripts, including ARM Cortex-M0/M3/M4/M33 and Cortex-A55 platform descriptions |
 | `benchmarks/` | AIXOS and FreeRTOS benchmark input projects |
 | `tools/` | Tool checks, static analysis, manifest, RAM report, Renode config, and RISC-V toolchain installer |
 | `docs/` | Customer development, architecture, configuration, porting, and release notes |
@@ -45,9 +45,12 @@ individual headers when a smaller dependency surface is preferred.
 | Target | Command | Notes |
 |---|---|---|
 | Host tests | `make test` | Builds and runs `build/host/aixos_tests` |
-| Cortex-M3 firmware | `make arm` | Uses `arm-none-eabi-gcc` and `arch/arm/cortex-m3/` |
+| ARM Cortex-M firmware | `make arm AIXOS_PLATFORM=cortex-m3` | Select `cortex-m0`, `cortex-m3`, `cortex-m4`, or `cortex-m33`; `make config` writes the default |
+| Cortex-A55 firmware | `make arm AIXOS_PLATFORM=cortex-a55` | Builds and links an AArch64 ELF with `clang --target=aarch64-none-elf` and `ld.lld` |
 | RV32IM firmware | `make riscv` | Uses `riscv-none-elf-gcc`, `RISCV_PREFIX`, or `RISCV_TOOLCHAIN_DIR` |
-| Cortex-M3 Renode | `make renode` | Builds ARM firmware and runs `tests/renode_cortexm3.robot` |
+| ARM Cortex-M Renode | `make renode` | Builds and smoke-tests the selected Cortex-M platform |
+| ARM Cortex Renode platforms | `make renode-arm-platforms` | Load-checks M0/M3/M4/M33/A55 platform descriptions and smoke-tests all supported ARM targets |
+| Cortex-A55 instruction smoke | `make instruction-sim` | Runs the A55 Renode instruction-level smoke and records metrics under `test-results/instruction-simulation` |
 | RV32IM Renode | `make renode-riscv` | Builds, validates, and simulates the RISC-V image |
 | Static analysis | `make analyze` | Runs Clang static analysis through `tools/static_analysis.sh` |
 | Release quality sweep | `make quality` | Runs the full configured verification matrix |
@@ -60,6 +63,11 @@ package:
 make arm APP_SRCS=/path/to/customer/main.c
 make riscv APP_SRCS=/path/to/customer/main.c
 ```
+
+See `docs/RENODE_ARM_PLATFORMS.md` for the ARM Cortex Renode matrix. The
+current Cortex coverage includes M0, M3, M4, M33, and A55 Renode smoke tests.
+Cortex-A55 has an AArch64 source port, linked ELF output, GIC/generic-timer
+bring-up, and user/syscall heartbeat checks in Renode.
 
 For the minimal Hello World example:
 

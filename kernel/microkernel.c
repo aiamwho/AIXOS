@@ -746,6 +746,10 @@ int32_t aixos_syscall_invoke(const aixos_syscall_request_t *request)
     register const aixos_syscall_request_t *r0 __asm("r0") = request;
     __asm volatile("svc 0" : "+r"(r0) :: "memory");
     return (int32_t)(uintptr_t)r0;
+#elif defined(__aarch64__)
+    register const aixos_syscall_request_t *x0 __asm("x0") = request;
+    __asm volatile("svc #0" : "+r"(x0) :: "memory");
+    return (int32_t)(uintptr_t)x0;
 #elif defined(__riscv)
     register const aixos_syscall_request_t *a0 __asm("a0") = request;
     __asm volatile("ecall" : "+r"(a0) :: "memory");
@@ -783,6 +787,18 @@ static inline int32_t __attribute__((unused)) aixos_syscall_invoke_fast(
         : "r"(r1), "r"(r2), "r"(r3)
         : "memory");
     return (int32_t)r0;
+#elif defined(__aarch64__)
+    register uintptr_t x0 __asm("x0") = (uintptr_t)number;
+    register uintptr_t x1 __asm("x1") = a0;
+    register uintptr_t x2 __asm("x2") = a1;
+    register uintptr_t x3 __asm("x3") = a2;
+    register uintptr_t x4 __asm("x4") = a3;
+    register uintptr_t x5 __asm("x5") = a4;
+    __asm volatile("svc #0"
+        : "+r"(x0)
+        : "r"(x1), "r"(x2), "r"(x3), "r"(x4), "r"(x5)
+        : "memory");
+    return (int32_t)x0;
 #else
     aixos_syscall_request_t req = { number, { a0, a1, a2, a3, a4 } };
     return aixos_syscall_invoke(&req);

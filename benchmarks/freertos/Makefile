@@ -1,13 +1,14 @@
 FREERTOS := ../../third_party/FreeRTOS-Kernel
 BUILD := ../../build/freertos
 ARM_PREFIX ?= arm-none-eabi-
-RISCV_TOOLCHAIN_DIR ?= /private/tmp/xpack-riscv-none-elf-gcc-15.2.0-1
-RISCV_PREFIX ?= riscv-none-elf-
+RISCV_TOOLCHAIN_DIR ?=
+RISCV_PREFIX ?= $(if $(shell command -v riscv-none-elf-gcc 2>/dev/null),riscv-none-elf-,$(if $(shell command -v riscv64-elf-gcc 2>/dev/null),riscv64-elf-,riscv-none-elf-))
 
 ARM_CC := $(ARM_PREFIX)gcc
 ARM_SIZE := $(ARM_PREFIX)size
-RISCV_CC := $(RISCV_TOOLCHAIN_DIR)/bin/$(RISCV_PREFIX)gcc
-RISCV_SIZE := $(RISCV_TOOLCHAIN_DIR)/bin/$(RISCV_PREFIX)size
+RISCV_BIN := $(if $(RISCV_TOOLCHAIN_DIR),$(RISCV_TOOLCHAIN_DIR)/bin/,)
+RISCV_CC := $(RISCV_BIN)$(RISCV_PREFIX)gcc
+RISCV_SIZE := $(RISCV_BIN)$(RISCV_PREFIX)size
 
 KERNEL_SRCS := \
 	$(FREERTOS)/tasks.c \

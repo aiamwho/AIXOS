@@ -8,9 +8,13 @@ COMMON_SRCS := \
 	$(ROOT)/kernel/task.c \
 	$(ROOT)/kernel/heap.c \
 	$(ROOT)/kernel/mempool.c \
+	$(ROOT)/kernel/mpu.c \
 	$(ROOT)/kernel/timer.c \
 	$(ROOT)/kernel/trace.c \
 	$(ROOT)/kernel/string.c \
+	$(ROOT)/kernel/microkernel.c \
+	$(ROOT)/kernel/namespace.c \
+	$(ROOT)/kernel/timewheel.c \
 	$(ROOT)/kernel/ipc/sem.c \
 	$(ROOT)/kernel/ipc/mutex.c \
 	$(ROOT)/kernel/ipc/mq.c \
@@ -29,14 +33,21 @@ CFLAGS := $(INCLUDES) -std=c99 -Wall -Wextra -Werror -Wshadow \
 ARM_PREFIX ?= arm-none-eabi-
 ARM_CC := $(ARM_PREFIX)gcc
 ARM_SIZE := $(ARM_PREFIX)size
-ARM_SRCS := $(COMMON_SRCS) main.c \
-	$(ROOT)/arch/arm/cortex-m3/port.c \
+ARM_C_SRCS := $(COMMON_SRCS) main.c \
+	$(ROOT)/arch/arm/cortex-m3/port.c
+ARM_S_SRCS := \
 	$(ROOT)/arch/arm/cortex-m3/startup_stm32f103.s \
 	$(ROOT)/arch/arm/cortex-m3/portasm.s
+ARM_SRCS := $(ARM_C_SRCS) $(ARM_S_SRCS)
+ARM_AS_OBJS := \
+	$(BUILD)/arm/startup_stm32f103.o \
+	$(BUILD)/arm/portasm.o
 
-RISCV_TOOLCHAIN_DIR ?= /private/tmp/xpack-riscv-none-elf-gcc-15.2.0-1
-RISCV_CC := $(RISCV_TOOLCHAIN_DIR)/bin/riscv-none-elf-gcc
-RISCV_SIZE := $(RISCV_TOOLCHAIN_DIR)/bin/riscv-none-elf-size
+RISCV_TOOLCHAIN_DIR ?=
+RISCV_PREFIX ?= $(if $(shell command -v riscv-none-elf-gcc 2>/dev/null),riscv-none-elf-,$(if $(shell command -v riscv64-elf-gcc 2>/dev/null),riscv64-elf-,riscv-none-elf-))
+RISCV_BIN := $(if $(RISCV_TOOLCHAIN_DIR),$(RISCV_TOOLCHAIN_DIR)/bin/,)
+RISCV_CC := $(RISCV_BIN)$(RISCV_PREFIX)gcc
+RISCV_SIZE := $(RISCV_BIN)$(RISCV_PREFIX)size
 RISCV_SRCS := $(COMMON_SRCS) main.c \
 	$(ROOT)/arch/risc-v/port.c \
 	$(ROOT)/arch/risc-v/startup.s \
@@ -50,9 +61,16 @@ riscv: $(BUILD)/riscv/AIXOS.elf
 
 $(BUILD)/arm/AIXOS.elf: $(ARM_SRCS)
 	@mkdir -p $(dir $@)
+	$(ARM_CC) $(CFLAGS) -mcpu=cortex-m3 -mthumb -x assembler-with-cpp \
+		-c -o $(BUILD)/arm/startup_stm32f103.o \
+		$(ROOT)/arch/arm/cortex-m3/startup_stm32f103.s
+	$(ARM_CC) $(CFLAGS) -mcpu=cortex-m3 -mthumb -x assembler-with-cpp \
+		-c -o $(BUILD)/arm/portasm.o \
+		$(ROOT)/arch/arm/cortex-m3/portasm.s
 	$(ARM_CC) $(CFLAGS) -mcpu=cortex-m3 -mthumb -nostdlib \
 		-Wl,--gc-sections,-Map=$(@:.elf=.map) \
-		-T $(ROOT)/arch/arm/cortex-m3/link.ld -o $@ $(ARM_SRCS) -lgcc
+		-T $(ROOT)/arch/arm/cortex-m3/link.ld -o $@ \
+		$(ARM_C_SRCS) $(ARM_AS_OBJS) -lgcc
 	$(ARM_SIZE) $@
 
 $(BUILD)/riscv/AIXOS.elf: $(RISCV_SRCS)

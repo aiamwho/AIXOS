@@ -1,5 +1,4 @@
 .syntax unified
-.cpu    cortex-m3
 .thumb
 
 .global _estack
@@ -66,7 +65,8 @@ Reset_Handler:
     ble     .Lmain
     movs    r0, #0
 .Lfill:
-    str     r0, [r1], #4
+    str     r0, [r1]
+    adds    r1, #4
     subs    r2, #4
     bgt     .Lfill
 .Lmain:

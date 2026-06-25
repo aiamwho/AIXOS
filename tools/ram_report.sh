@@ -5,6 +5,8 @@ ARM_SIZE=${ARM_SIZE:-arm-none-eabi-size}
 RISCV_SIZE=${RISCV_SIZE:-riscv-none-elf-size}
 HOST_CC=${HOST_CC:-cc}
 OUT=${1:-build/reports/ram-budget.txt}
+ARM_ELF=${ARM_ELF:-build/arm/cortex-m3/AIXOS.elf}
+RISCV_ELF=${RISCV_ELF:-build/riscv/AIXOS.elf}
 
 print_config()
 {
@@ -29,8 +31,8 @@ mkdir -p "$(dirname "$OUT")"
     printf '\nMinimal profile limits\n'
     print_config 1
     printf '\nCortex-M3 image\n'
-    "$ARM_SIZE" build/arm/AIXOS.elf
+    "$ARM_SIZE" "$ARM_ELF"
     printf '\nRV32IM image\n'
-    "$RISCV_SIZE" build/riscv/AIXOS.elf
+    "$RISCV_SIZE" "$RISCV_ELF"
 } > "$OUT"
 printf '%s\n' "$OUT"

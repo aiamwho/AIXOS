@@ -147,8 +147,18 @@ the product diagnostic channel before clearing them.
 The delivered ports are:
 
 - `arch/arm/cortex-m3/`
+- `arch/arm/aarch64/`
 - `arch/risc-v/`
 - `tests/host/` for native unit tests
+
+Renode platform descriptions cover Cortex-M0, Cortex-M3, Cortex-M4,
+Cortex-M33, and Cortex-A55 under `simulation/`; see
+`docs/RENODE_ARM_PLATFORMS.md` for the compatibility matrix. The Cortex-M0,
+Cortex-M3, Cortex-M4, and Cortex-M33 platforms are selectable through
+`make config` or `AIXOS_PLATFORM=<name>` and have Renode smoke coverage.
+Cortex-A55 has an AArch64 linked ELF port with Renode smoke coverage for
+GIC/generic-timer ticks, kernel heartbeat, user task heartbeat, and syscall
+error checks.
 
 New ports must implement the architecture interface in
 `arch/include/aixos/arch/arch.h`, provide startup code, supply a linker script,

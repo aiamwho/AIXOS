@@ -58,7 +58,10 @@ const manifest = {
     arm: version(process.env.ARM_CC || "arm-none-eabi-gcc"),
     riscv: version(process.env.RISCV_CC || "riscv-none-elf-gcc"),
   },
-  artifacts: ["build/arm/AIXOS.elf", "build/arm/AIXOS.map",
+  artifacts: ["build/arm/cortex-m3/AIXOS.elf",
+              "build/arm/cortex-m3/AIXOS.map",
+              "build/arm/cortex-a55/AIXOS.elf",
+              "build/arm/cortex-a55/AIXOS.map",
               "build/riscv/AIXOS.elf", "build/riscv/AIXOS.map"]
     .filter((file) => fs.existsSync(path.join(root, file)))
     .map((file) => ({ path: file, sha256: sha256(path.join(root, file)) })),

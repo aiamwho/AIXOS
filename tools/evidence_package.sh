@@ -42,11 +42,17 @@ fi
 if [ -f build/host-coverage/coverage.txt ]; then
     cp build/host-coverage/coverage.txt "$OUT/reports/"
 fi
-if [ -f build/arm/AIXOS.elf ]; then
-    cp build/arm/AIXOS.elf "$OUT/reports/AIXOS-arm.elf"
+if [ -f build/arm/cortex-m3/AIXOS.elf ]; then
+    cp build/arm/cortex-m3/AIXOS.elf "$OUT/reports/AIXOS-cortex-m3.elf"
 fi
-if [ -f build/arm/AIXOS.map ]; then
-    cp build/arm/AIXOS.map "$OUT/reports/AIXOS-arm.map"
+if [ -f build/arm/cortex-m3/AIXOS.map ]; then
+    cp build/arm/cortex-m3/AIXOS.map "$OUT/reports/AIXOS-cortex-m3.map"
+fi
+if [ -f build/arm/cortex-a55/AIXOS.elf ]; then
+    cp build/arm/cortex-a55/AIXOS.elf "$OUT/reports/AIXOS-cortex-a55.elf"
+fi
+if [ -f build/arm/cortex-a55/AIXOS.map ]; then
+    cp build/arm/cortex-a55/AIXOS.map "$OUT/reports/AIXOS-cortex-a55.map"
 fi
 if [ -f build/riscv/AIXOS.elf ]; then
     cp build/riscv/AIXOS.elf "$OUT/reports/AIXOS-riscv.elf"
@@ -69,4 +75,3 @@ Contents:
 EOF
 
 printf '%s\n' "$OUT"
-

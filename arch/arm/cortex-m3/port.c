@@ -48,6 +48,9 @@ void aixos_arm_svc_handler(uint32_t *frame)
 extern void aixos_asm_int_disable(void);
 extern void aixos_asm_int_restore(uint32_t flags);
 
+#if AIXOS_CFG_ENABLE_MPU && \
+    (AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M3 || \
+     AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M4)
 static uint32_t mpu_log2(uint32_t value)
 {
     uint32_t log = 0U;
@@ -86,10 +89,13 @@ static void mpu_region_configure(uint32_t region, uintptr_t base,
     rasr |= (attr & AIXOS_MPU_DEVICE) != 0U ? MPU_RASR_DEVICE : MPU_RASR_NORMAL;
     MPU_RASR = rasr;
 }
+#endif
 
 void aixos_arch_mpu_configure_task(const aixos_tcb_t *task)
 {
-#if AIXOS_CFG_ENABLE_MPU
+#if AIXOS_CFG_ENABLE_MPU && \
+    (AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M3 || \
+     AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M4)
     uint32_t i;
     uint32_t dynamic_regions;
     if ((MPU_TYPE & 0xFF00U) == 0U) {
@@ -120,11 +126,12 @@ void aixos_arch_mpu_configure_task(const aixos_tcb_t *task)
 }
 
 /*
- * Cortex-M3 栈帧初始化
+ * Cortex-M 栈帧初始化
  * 模拟异常自动入栈 + 手动入栈 R4-R11
- * 栈布局 (低→高): R4..R11, R0, R1, R2, R3, R12, LR, PC, xPSR
+ * Cortex-M0 栈布局 (低→高): R8..R11, R4..R7, R0..xPSR
+ * Cortex-M3+ 栈布局 (低→高): R4..R11, R0..xPSR
  * entry: 任务函数地址; stack_top: 栈顶(高地址); arg: 第一个参数(R0)
- * 返回: 栈指针(指向 R4 位置)
+ * 返回: 栈指针(指向手动保存上下文的最低地址)
  */
 void *aixos_arch_stack_init(void (*entry)(void*), void *stack_top, void *arg,
                             int user_mode)
@@ -143,6 +150,17 @@ void *aixos_arch_stack_init(void (*entry)(void*), void *stack_top, void *arg,
     *(--stk) = 0x09;                     /* R1 */
     *(--stk) = (uint32_t)arg;            /* R0 (入口参数) */
 
+#if AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M0
+    /* Cortex-M0 restores high registers through low-register temporaries. */
+    *(--stk) = 0x04;                     /* R7 */
+    *(--stk) = 0x03;                     /* R6 */
+    *(--stk) = 0x02;                     /* R5 */
+    *(--stk) = 0x01;                     /* R4 */
+    *(--stk) = 0x08;                     /* R11 */
+    *(--stk) = 0x07;                     /* R10 */
+    *(--stk) = 0x06;                     /* R9 */
+    *(--stk) = 0x05;                     /* R8 */
+#else
     /* 手动保存 R4-R11 */
     *(--stk) = 0x08;                     /* R11 */
     *(--stk) = 0x07;                     /* R10 */
@@ -152,6 +170,7 @@ void *aixos_arch_stack_init(void (*entry)(void*), void *stack_top, void *arg,
     *(--stk) = 0x03;                     /* R6 */
     *(--stk) = 0x02;                     /* R5 */
     *(--stk) = 0x01;                     /* R4 */
+#endif
 
     return (void *)stk;
 }
@@ -165,7 +184,10 @@ void aixos_arch_system_init(void)
     /* PendSV lowest, SysTick remains maskable by the BASEPRI threshold. */
     NVIC_SHPR3 = (AIXOS_CFG_PENDSV_IRQ_PRIORITY << 16) |
                  (AIXOS_CFG_SYSTICK_IRQ_PRIORITY << 24);
+#if AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M3 || \
+    AIXOS_CFG_PLATFORM == AIXOS_CFG_PLATFORM_CORTEX_M4
     SCB_SHCSR |= SCB_SHCSR_FAULT_ENABLE;
+#endif
     aixos_arch_mpu_configure_task(NULL);
 }
 
