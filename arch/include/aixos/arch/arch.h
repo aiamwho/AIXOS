@@ -37,7 +37,11 @@ void *aixos_arch_stack_init(void (*entry)(void*), void *stack_top, void *arg,
 void aixos_arch_context_switch(void);
 
 /* ── 启动第一个任务 (在 arch port 中实现) ── */
+#ifdef AIXOS_HOST_TEST
+void aixos_arch_start_first_task(void);
+#else
 void aixos_arch_start_first_task(void) __attribute__((noreturn));
+#endif
 
 /* ── 时钟中断入口 ──────────────────────────── */
 void aixos_arch_tick_handler(void);

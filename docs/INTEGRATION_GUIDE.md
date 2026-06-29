@@ -69,6 +69,8 @@ The application entry must initialize the kernel before starting the scheduler:
 
 ```c
 #include "aixos/aixos.h"
+#include "aixos/namespace.h"
+#include "kernel/timewheel.h"
 
 static void app_task(void *arg)
 {
@@ -84,21 +86,33 @@ int main(void)
     static aixos_tcb_t app_tcb;
     static uint8_t app_stack[512] __attribute__((aligned(8)));
 
-    aixos_object_init();
-    aixos_sched_init();
     aixos_heap_init(product_heap, product_heap_size);
+    aixos_object_init();
     aixos_task_init();
+    aixos_trace_init();
     aixos_timer_init();
+#if AIXOS_CFG_ENABLE_NAMESPACE
+    aixos_namespace_init();
+#endif
+#if AIXOS_CFG_ENABLE_TIME_WHEEL
+    aixos_timing_wheel_init();
+#endif
+    aixos_sched_init();
 
     (void)aixos_task_create_static("app", app_task, NULL,
                                    app_stack, sizeof(app_stack),
                                    10, &app_tcb);
 
+    aixos_arch_system_init();
     aixos_start();
 }
 ```
 
 Use the target startup code to call `main()` after data/BSS initialization.
+If `AIXOS_CFG_ENABLE_TIME_WHEEL` is enabled, `aixos_timing_wheel_init()` is
+required before the scheduler starts and before any tick path can process
+timeouts. Skipping it can corrupt timeout lists or make instruction-level
+simulation report null-address memory accesses.
 
 ## Static and Dynamic Objects
 
@@ -253,6 +267,9 @@ make renode
 make coverage
 make ram-report RISCV_PREFIX=riscv64-elf-
 make manifest RISCV_PREFIX=riscv64-elf-
+make renode-arm-platforms RISCV_PREFIX=riscv64-elf-
+make renode-riscv-stress RISCV_PREFIX=riscv64-elf-
+make instruction-bench RISCV_PREFIX=riscv64-elf-
 ```
 
 Run `make clean` before packaging source-only customer deliverables.

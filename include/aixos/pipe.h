@@ -7,4 +7,8 @@ int aixos_pipe_write(aixos_handle_t pipe, const void *data, size_t len, uint32_t
 int aixos_pipe_read(aixos_handle_t pipe, void *buf, size_t len, uint32_t timeout_ms);
 int aixos_pipe_write_from_isr(aixos_handle_t pipe, const void *data, size_t len);
 int aixos_pipe_delete(aixos_handle_t pipe);
+#ifdef AIXOS_HOST_TEST
+int aixos_test_pipe_add_waiter(aixos_handle_t pipe, aixos_handle_t task,
+                               int writer);
+#endif
 #endif

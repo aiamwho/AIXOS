@@ -7,4 +7,8 @@ int aixos_event_wait(aixos_handle_t ev, uint32_t mask, uint8_t mode,
 int aixos_event_set(aixos_handle_t ev, uint32_t flags);
 int aixos_event_clear(aixos_handle_t ev, uint32_t flags);
 int aixos_event_delete(aixos_handle_t ev);
+#ifdef AIXOS_HOST_TEST
+int aixos_test_event_add_waiter(aixos_handle_t ev, aixos_handle_t task,
+                                uint32_t mask, uint8_t mode);
+#endif
 #endif

@@ -64,6 +64,11 @@ int aixos_copy_to_user(void *user_dst, const void *kernel_src, size_t size);
 int aixos_zero_to_user(void *user_dst, size_t size);
 int32_t aixos_syscall_dispatch(const aixos_syscall_request_t *request);
 int32_t aixos_syscall_invoke(const aixos_syscall_request_t *request);
+#ifdef AIXOS_HOST_TEST
+int32_t aixos_test_syscall_invoke_fast(uint32_t number, uintptr_t a0,
+                                       uintptr_t a1, uintptr_t a2,
+                                       uintptr_t a3, uintptr_t a4);
+#endif
 
 int aixos_user_yield(void);
 int aixos_user_sleep(uint32_t milliseconds);

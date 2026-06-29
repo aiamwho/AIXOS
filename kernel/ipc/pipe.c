@@ -270,3 +270,30 @@ int aixos_pipe_delete(aixos_handle_t handle)
     }
     return AIXOS_OK;
 }
+
+#ifdef AIXOS_HOST_TEST
+int aixos_test_pipe_add_waiter(aixos_handle_t handle, aixos_handle_t task,
+                               int writer)
+{
+    aixos_pipe_t *pipe;
+    aixos_tcb_t *tcb;
+    aixos_list_t *wait_list;
+    aixos_arch_flags_t flags = aixos_arch_int_disable();
+    pipe = pipe_from_handle(handle);
+    tcb = aixos_tcb_from_handle(task);
+    if (pipe == NULL || tcb == NULL) {
+        aixos_arch_int_restore(flags);
+        return AIXOS_ERR_INVAL;
+    }
+    wait_list = writer != 0 ? &pipe->write_wait : &pipe->read_wait;
+    aixos_sched_remove_task(tcb);
+    tcb->state = AIXOS_TASK_BLOCKED;
+    tcb->wait_obj = pipe;
+    tcb->wait_list = wait_list;
+    tcb->wait_type = AIXOS_OBJ_PIPE;
+    tcb->wait_result = AIXOS_OK;
+    aixos_list_add_tail(&tcb->wait_node, wait_list);
+    aixos_arch_int_restore(flags);
+    return AIXOS_OK;
+}
+#endif

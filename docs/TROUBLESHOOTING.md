@@ -149,6 +149,26 @@ then Robot did not reach the firmware test body. Check local Renode
 installation, robot-server startup, temporary directory permissions, and port
 file handling before treating it as a firmware regression.
 
+### Instruction benchmark logs null-address memory accesses
+
+Repeated warnings such as `ReadDoubleWord from non existing peripheral at 0x0`
+inside `aixos_timing_wheel_tick()` usually mean an application enabled
+`AIXOS_CFG_ENABLE_TIME_WHEEL` but did not call `aixos_timing_wheel_init()`
+before starting the scheduler.
+
+Fix the application initialization sequence:
+
+```c
+aixos_timer_init();
+#if AIXOS_CFG_ENABLE_NAMESPACE
+aixos_namespace_init();
+#endif
+#if AIXOS_CFG_ENABLE_TIME_WHEEL
+aixos_timing_wheel_init();
+#endif
+aixos_sched_init();
+```
+
 ## Diagnostics Collection
 
 For customer support, collect:

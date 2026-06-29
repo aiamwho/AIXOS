@@ -40,8 +40,12 @@ unsigned int aixos_test_switch_requests_get(void)
 
 void aixos_arch_start_first_task(void)
 {
+#ifdef AIXOS_HOST_TEST
+    return;
+#else
     for (;;) {
     }
+#endif
 }
 
 void aixos_arch_tick_handler(void)

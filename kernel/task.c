@@ -153,13 +153,21 @@ static void idle_task_entry(void *arg)
     }
 }
 
+#ifdef AIXOS_HOST_TEST
+static void task_exit_trap(void);
+#else
 static void task_exit_trap(void) __attribute__((noreturn));
+#endif
 
 static void task_exit_trap(void)
 {
     (void)aixos_task_delete(aixos_task_self());
+#ifdef AIXOS_HOST_TEST
+    return;
+#else
     for (;;) {
     }
+#endif
 }
 
 void aixos_task_return_trap(void)
@@ -682,6 +690,10 @@ void aixos_start(void)
     aixos_first_start = 1;
     aixos_arch_systick_enable();
     aixos_arch_start_first_task();
+#ifdef AIXOS_HOST_TEST
+    idle_task_entry(NULL);
+    return;
+#endif
 }
 
 uint32_t aixos_task_count(void)

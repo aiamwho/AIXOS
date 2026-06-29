@@ -10,4 +10,7 @@ void aixos_timer_init(void);
 void aixos_timer_tick(uint32_t now);
 int aixos_timer_service_start(void);
 unsigned int aixos_timer_dispatch(void);
+#ifdef AIXOS_HOST_TEST
+void aixos_test_timer_service_entry(void);
+#endif
 #endif

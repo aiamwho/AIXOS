@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "aixos/aixos.h"
+#include "aixos/namespace.h"
 #include "aixos/arch/arch.h"
+#include "kernel/timewheel.h"
 
 volatile uint32_t aixos_bench_heartbeat;
 volatile uint32_t aixos_bench_messages;
@@ -67,6 +69,12 @@ int main(void)
     aixos_task_init();
     aixos_trace_init();
     aixos_timer_init();
+#if AIXOS_CFG_ENABLE_NAMESPACE
+    aixos_namespace_init();
+#endif
+#if AIXOS_CFG_ENABLE_TIME_WHEEL
+    aixos_timing_wheel_init();
+#endif
     aixos_sched_init();
 
     benchmark_queue = aixos_mq_create(4U, sizeof(uint32_t));

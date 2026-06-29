@@ -132,8 +132,13 @@ int aixos_task_block_current(aixos_list_t *wait_list, void *wait_obj,
                              uint32_t interrupt_flags);
 void aixos_task_wake(aixos_tcb_t *tcb, int result);
 void aixos_task_waiter_priority_changed(aixos_tcb_t *tcb);
+#ifdef AIXOS_HOST_TEST
+void aixos_start(void);
+void aixos_task_return_trap(void);
+#else
 void aixos_start(void) __attribute__((noreturn));
 void aixos_task_return_trap(void) __attribute__((noreturn));
+#endif
 uint32_t aixos_task_count(void);
 uint32_t aixos_ms_to_ticks(uint32_t ms);
 uint32_t aixos_timeout_remaining_ms(uint32_t start_tick, uint32_t timeout_ms);

@@ -268,6 +268,9 @@ static void timer_service_entry(void *arg)
         }
         (void)aixos_task_block_current(&service_waiters, NULL,
                                        AIXOS_OBJ_TIMER, UINT32_MAX, flags);
+#ifdef AIXOS_HOST_TEST
+        return;
+#endif
     }
 }
 
@@ -279,3 +282,10 @@ int aixos_timer_service_start(void)
         AIXOS_CFG_TIMER_STACK_SIZE, AIXOS_CFG_TIMER_TASK_PRIORITY);
     return task == AIXOS_HANDLE_INVALID ? AIXOS_ERR_NOMEM : AIXOS_OK;
 }
+
+#ifdef AIXOS_HOST_TEST
+void aixos_test_timer_service_entry(void)
+{
+    timer_service_entry(NULL);
+}
+#endif

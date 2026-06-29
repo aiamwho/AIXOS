@@ -52,6 +52,7 @@ individual headers when a smaller dependency surface is preferred.
 | ARM Cortex Renode platforms | `make renode-arm-platforms` | Load-checks M0/M3/M4/M33/A55 platform descriptions and smoke-tests all supported ARM targets |
 | Cortex-A55 instruction smoke | `make instruction-sim` | Runs the A55 Renode instruction-level smoke and records metrics under `test-results/instruction-simulation` |
 | RV32IM Renode | `make renode-riscv` | Builds, validates, and simulates the RISC-V image |
+| API boundary Renode | `make api-boundary-sim RISCV_PREFIX=riscv64-elf-` | Runs API parameter and functional boundary checks on Cortex-M3 and RV32IM; writes English and Chinese reports under `test-results/api-boundary/` |
 | Static analysis | `make analyze` | Runs Clang static analysis through `tools/static_analysis.sh` |
 | Release quality sweep | `make quality` | Runs the full configured verification matrix |
 
@@ -124,6 +125,7 @@ make renode-riscv RISCV_PREFIX=riscv64-elf-
 - [Porting guide](docs/PORTING_GUIDE.md)
 - [Troubleshooting guide](docs/TROUBLESHOOTING.md)
 - [Release notes](docs/RELEASE_NOTES.md)
+- [Chinese documentation index](docs/README.zh-CN.md)
 
 ## Release Status
 
@@ -131,3 +133,8 @@ This package is a v1.0 source release for customer evaluation and integration.
 Production use requires product-specific hardware validation,
 worst-case execution-time evidence, long-run stability testing, and safety or
 security assessment appropriate to the target device.
+
+The 2026-06-29 local verification pass covered host quality gates, ARM Cortex
+Renode smoke, RV32IM Renode stress, A55 instruction smoke, AIXOS instruction
+benchmarks, and Cortex-M3/RV32IM API boundary simulation. See `TESTING.md` for
+the command list and simulator limits.

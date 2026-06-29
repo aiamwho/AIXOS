@@ -1,6 +1,6 @@
 # AIXOS v1.0 Release Notes
 
-Date: 2026-06-21
+Date: 2026-06-29
 
 ## Release Type
 
@@ -43,6 +43,23 @@ visualization work prepared in the v0.9 baseline.
 - POSIX compatibility and limitation matrix.
 - Latency benchmark firmware entry for Cortex-M3 and RV32IM.
 - Trace viewer tool that converts trace JSON to CSV or HTML.
+- Benchmark and latency applications now initialize enabled namespace and
+  timing-wheel subsystems before scheduler start, matching the smoke and Hello
+  World application sequence and preventing timeout-list corruption during
+  instruction-level simulation.
+- Timing-wheel level-2 slot placement and cascade handling were corrected after
+  white-box path tests exposed late wakeups for far-future timeouts.
+- Host white-box and black-box regression coverage was expanded with
+  namespace/resource-manager paths, timing-wheel level/cascade paths,
+  microkernel synchronous IPC paths, public API invalid-parameter matrices, and
+  repeated user workflow scenarios. The 2026-06-29 host suite now reports 23
+  named tests and `7207 checks, 0 failures`.
+- Runtime API boundary simulation now runs on Cortex-M3 and RV32IM Renode with
+  929 boundary checks per target and 0 failures.
+- Local 2026-06-29 verification passed `make quality`, MPU focused tests,
+  latency benchmark build, ARM Cortex Renode platform matrix, RV32IM Renode
+  stress, AIXOS instruction benchmark collection, API boundary simulation, and
+  evidence-package generation.
 
 ## Baseline Contents
 
@@ -79,6 +96,9 @@ visualization work prepared in the v0.9 baseline.
 ## Known Follow-Up Items
 
 - Rerun full `make quality` in the customer integration environment.
+- Rerun `make renode-arm-platforms`, `make renode-riscv-stress`, and
+  `make instruction-bench` when toolchains, Renode, platform files, or
+  benchmark workloads change.
 - Complete product-specific hardware-in-the-loop validation.
 - Validate MPU/PMP fault behavior on target hardware and simulator models.
 - Measure worst-case interrupt latency, context-switch latency, timer callback

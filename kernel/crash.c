@@ -121,6 +121,9 @@ void aixos_arm_fault_handler(uint32_t *frame, uint32_t reason)
     for (volatile int i = 0; i < 100000; i++) {
         __asm volatile("nop");
     }
+#ifdef AIXOS_HOST_TEST
+    return;
+#else
 #if AIXOS_CFG_ENABLE_PANIC_RESET
     aixos_system_reset();
 #else
@@ -129,11 +132,15 @@ void aixos_arm_fault_handler(uint32_t *frame, uint32_t reason)
     }
 #endif
     for (;;) { __asm volatile("wfi"); } /* unreachable */
+#endif
 }
 
 /* Controlled system reset. */
 void aixos_system_reset(void)
 {
+#ifdef AIXOS_HOST_TEST
+    return;
+#else
     /* 尝试触发软件复位 */
 #if defined(__aarch64__)
     __asm volatile("wfi");
@@ -150,6 +157,7 @@ void aixos_system_reset(void)
     for (;;) {
         __asm volatile("wfi");
     }
+#endif
 }
 
 /* Kernel panic path. */
@@ -165,6 +173,9 @@ void aixos_panic(const char *msg, uint32_t reason)
     for (volatile int i = 0; i < 1000; i++) {
         __asm volatile("nop");
     }
+#ifdef AIXOS_HOST_TEST
+    return;
+#else
 #if AIXOS_CFG_ENABLE_PANIC_RESET
     aixos_system_reset();
 #else
@@ -173,4 +184,5 @@ void aixos_panic(const char *msg, uint32_t reason)
     }
 #endif
     for (;;) { __asm volatile("wfi"); } /* unreachable */
+#endif
 }

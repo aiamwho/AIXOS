@@ -764,7 +764,10 @@ static inline int32_t __attribute__((unused)) aixos_syscall_invoke_fast(
     uint32_t number, uintptr_t a0, uintptr_t a1,
     uintptr_t a2, uintptr_t a3, uintptr_t a4)
 {
-#if defined(__riscv)
+#if defined(AIXOS_HOST_TEST)
+    aixos_syscall_request_t req = { number, { a0, a1, a2, a3, a4 } };
+    return aixos_syscall_invoke(&req);
+#elif defined(__riscv)
     register uintptr_t r_a0 __asm("a0") = (uintptr_t)number;
     register uintptr_t r_a1 __asm("a1") = a0;
     register uintptr_t r_a2 __asm("a2") = a1;
@@ -804,6 +807,15 @@ static inline int32_t __attribute__((unused)) aixos_syscall_invoke_fast(
     return aixos_syscall_invoke(&req);
 #endif
 }
+
+#ifdef AIXOS_HOST_TEST
+int32_t aixos_test_syscall_invoke_fast(uint32_t number, uintptr_t a0,
+                                       uintptr_t a1, uintptr_t a2,
+                                       uintptr_t a3, uintptr_t a4)
+{
+    return aixos_syscall_invoke_fast(number, a0, a1, a2, a3, a4);
+}
+#endif
 
 static int32_t invoke(uint32_t number, uintptr_t a0, uintptr_t a1,
                       uintptr_t a2, uintptr_t a3, uintptr_t a4)

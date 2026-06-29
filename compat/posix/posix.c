@@ -369,7 +369,11 @@ void aixos_pthread_exit(void *value)
         thread_complete(thread, value);
     }
     (void)aixos_task_delete(aixos_task_self());
+#ifdef AIXOS_HOST_TEST
+    return;
+#else
     for (;;) {}
+#endif
 }
 
 int aixos_pthread_getschedprio(aixos_pthread_t thread, int *priority)
@@ -1681,5 +1685,29 @@ int aixos_posix_test_complete(aixos_pthread_t thread_id, void *value)
     thread->completed = 1U;
     aixos_arch_int_restore(flags);
     return map_error(aixos_sem_post(thread->completion));
+}
+
+int aixos_posix_test_run_thread(aixos_pthread_t thread_id)
+{
+    posix_thread_t *thread;
+    aixos_tcb_t *tcb;
+    aixos_tcb_t *saved;
+    aixos_arch_flags_t flags = aixos_arch_int_disable();
+    thread = thread_find(thread_id);
+    if (thread == NULL || thread->completed != 0U) {
+        aixos_arch_int_restore(flags);
+        return AIXOS_ESRCH;
+    }
+    aixos_arch_int_restore(flags);
+
+    tcb = aixos_tcb_from_handle(thread_id);
+    if (tcb == NULL) {
+        return AIXOS_ESRCH;
+    }
+    saved = g_cur_task;
+    aixos_test_set_current(tcb);
+    thread_entry(thread);
+    aixos_test_set_current(saved);
+    return 0;
 }
 #endif

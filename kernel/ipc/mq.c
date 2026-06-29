@@ -362,3 +362,30 @@ int aixos_mq_delete(aixos_handle_t handle)
     }
     return AIXOS_OK;
 }
+
+#ifdef AIXOS_HOST_TEST
+int aixos_test_mq_add_waiter(aixos_handle_t handle, aixos_handle_t task,
+                             int sender)
+{
+    aixos_mq_t *queue;
+    aixos_tcb_t *tcb;
+    aixos_list_t *wait_list;
+    aixos_arch_flags_t flags = aixos_arch_int_disable();
+    queue = mq_from_handle(handle);
+    tcb = aixos_tcb_from_handle(task);
+    if (queue == NULL || tcb == NULL) {
+        aixos_arch_int_restore(flags);
+        return AIXOS_ERR_INVAL;
+    }
+    wait_list = sender != 0 ? &queue->send_wait : &queue->recv_wait;
+    aixos_sched_remove_task(tcb);
+    tcb->state = AIXOS_TASK_BLOCKED;
+    tcb->wait_obj = queue;
+    tcb->wait_list = wait_list;
+    tcb->wait_type = AIXOS_OBJ_MQ;
+    tcb->wait_result = AIXOS_OK;
+    aixos_list_add_tail(&tcb->wait_node, wait_list);
+    aixos_arch_int_restore(flags);
+    return AIXOS_OK;
+}
+#endif

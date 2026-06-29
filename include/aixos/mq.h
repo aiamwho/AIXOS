@@ -22,4 +22,8 @@ int aixos_mq_recv_priority(aixos_handle_t mq, void *buf, size_t capacity,
                            uint32_t timeout_ms);
 int aixos_mq_get_info(aixos_handle_t mq, aixos_mq_info_t *info);
 int aixos_mq_delete(aixos_handle_t mq);
+#ifdef AIXOS_HOST_TEST
+int aixos_test_mq_add_waiter(aixos_handle_t mq, aixos_handle_t task,
+                             int sender);
+#endif
 #endif

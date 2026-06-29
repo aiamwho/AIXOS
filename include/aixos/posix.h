@@ -228,7 +228,11 @@ int aixos_pthread_join(aixos_pthread_t thread, void **value);
 int aixos_pthread_detach(aixos_pthread_t thread);
 aixos_pthread_t aixos_pthread_self(void);
 int aixos_pthread_equal(aixos_pthread_t left, aixos_pthread_t right);
+#ifdef AIXOS_HOST_TEST
+void aixos_pthread_exit(void *value);
+#else
 void aixos_pthread_exit(void *value) __attribute__((noreturn));
+#endif
 int aixos_pthread_getschedprio(aixos_pthread_t thread, int *priority);
 int aixos_pthread_setschedprio(aixos_pthread_t thread, int priority);
 int aixos_sched_yield(void);
@@ -376,6 +380,7 @@ int *aixos_posix_errno_location(void);
 
 #ifdef AIXOS_HOST_TEST
 int aixos_posix_test_complete(aixos_pthread_t thread, void *value);
+int aixos_posix_test_run_thread(aixos_pthread_t thread);
 #endif
 
 #endif /* AIXOS_POSIX_H */

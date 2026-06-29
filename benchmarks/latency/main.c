@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "aixos/aixos.h"
+#include "aixos/namespace.h"
 #include "aixos/arch/arch.h"
+#include "kernel/timewheel.h"
 
 #define LATENCY_STACK_SIZE 512U
 
@@ -79,6 +81,12 @@ int main(void)
     aixos_task_init();
     aixos_trace_init();
     aixos_timer_init();
+#if AIXOS_CFG_ENABLE_NAMESPACE
+    aixos_namespace_init();
+#endif
+#if AIXOS_CFG_ENABLE_TIME_WHEEL
+    aixos_timing_wheel_init();
+#endif
     aixos_sched_init();
 
     latency_sem = aixos_sem_create(0);
@@ -104,4 +112,3 @@ int main(void)
     aixos_arch_system_init();
     aixos_start();
 }
-

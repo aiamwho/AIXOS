@@ -138,6 +138,8 @@ HOST_TEST_SRCS := tests/test_main.c tests/test_object.c tests/test_heap.c \
 	tests/test_kernel.c tests/test_reliability.c tests/test_stress.c \
 	tests/test_microkernel.c \
 	tests/test_mpu.c \
+	tests/test_path_coverage.c \
+	tests/test_coverage_expansion.c \
 	tests/test_posix.c tests/test_posix_public.c \
 	tests/host/arch_host.c
 HOST_KERNEL_SRCS := $(COMMON_SRCS)
@@ -396,6 +398,9 @@ instruction-sim: $(A55_ELF)
 instruction-bench: bench-build $(A55_ELF)
 	@AIXOS_SIM_INCLUDE_BENCHMARKS=1 sh tools/run_instruction_simulation.sh
 
+api-boundary-sim:
+	@RISCV_PREFIX=$(RISCV_PREFIX) sh tools/run_api_boundary_renode.sh
+
 clean:
 	rm -rf $(BUILD_DIR)
 
@@ -406,7 +411,8 @@ clean:
 	renode-arm-platforms renode-riscv \
 	renode-riscv-stress test-all coverage analyze ram-report manifest \
 	posix-api-check reproducible quality evidence-package bench-build \
-	latency-bench instruction-sim instruction-bench config oldconfig clean
+	latency-bench instruction-sim instruction-bench api-boundary-sim \
+	config oldconfig clean
 
 -include $(ARM_OBJS:.o=.d) $(A55_OBJS:.o=.d) $(RISCV_OBJS:.o=.d) \
 	$(HOST_OBJS:.o=.d) $(HOST_MPU_OBJS:.o=.d)

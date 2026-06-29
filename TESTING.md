@@ -22,12 +22,14 @@ and release qualification. Commands are run from the package root.
 | Cortex-A55 instruction smoke | `make instruction-sim` | Runs A55 Renode instruction-level heartbeat, tick, user, and error metrics |
 | RV32IM simulation | `make renode-riscv` | Runs Renode heartbeat, tick, trap, and register checks |
 | RV32IM stress simulation | `make renode-riscv-stress` | Repeats the RISC-V Renode test five times |
+| API boundary simulation | `make api-boundary-sim RISCV_PREFIX=riscv64-elf-` | Runs scheduler-started API parameter and functional boundary checks on Cortex-M3 and RV32IM Renode targets; writes `test-results/api-boundary/report.md` and `test-results/api-boundary/report.zh-CN.md` |
 | Static analysis | `make analyze` | Runs Clang static analysis |
 | Coverage | `make coverage` | Generates LLVM coverage report |
 | RAM report | `make ram-report` | Reports image memory use |
 | Manifest | `make manifest` | Generates source and build metadata |
 | Evidence package | `make evidence-package RISCV_PREFIX=riscv64-elf-` | Archives verification logs, reports, config, docs, ELF, and map files |
 | Latency benchmark build | `make latency-bench RISCV_PREFIX=riscv64-elf-` | Builds latency benchmark firmware for Cortex-M3 and RV32IM |
+| Instruction benchmark | `make instruction-bench RISCV_PREFIX=riscv64-elf-` | Builds AIXOS benchmark firmware and runs A55, Cortex-M3, and RV32IM Renode metric collection; FreeRTOS cases are skipped unless `third_party/FreeRTOS-Kernel` is present |
 | Full quality sweep | `make quality` | Runs the configured release-quality target set |
 
 If the RISC-V compiler is installed with a non-default command prefix, pass it
@@ -65,6 +67,16 @@ The customer release qualification should include these behaviors:
   alignment.
 - Renode platform descriptions for Cortex-M0, Cortex-M3, Cortex-M4,
   Cortex-M33, and Cortex-A55 load without platform-description errors.
+- Runtime API boundary checks cover task lifecycle, semaphore, mutex, message
+  queue, event, pipe, task notification, software timer, heap lockdown,
+  fixed-block mempool, MPU validation, and user syscall wrappers under Renode.
+- White-box path tests cover namespace registration/capability/resource
+  lifetime, timing-wheel level-1/level-2 insertion and cascade, microkernel
+  synchronous IPC send/receive/reply/disconnect paths, and invalid-parameter
+  matrices for public kernel APIs.
+- Black-box workflow tests repeatedly exercise semaphore, message queue,
+  event, pipe, notification, and timeout-oriented user scenarios with
+  representative payload and boundary values.
 
 ## Customer Release Criteria
 
@@ -101,6 +113,49 @@ The generated `build/evidence-package/` directory contains:
 
 Archive this directory outside the source package for customer release records.
 
+## Current Local Verification Snapshot
+
+The package was re-verified on 2026-06-29 with:
+
+- Apple clang 21.0.0 for host tests.
+- `arm-none-eabi-gcc` 16.1.0 for Cortex-M builds.
+- `riscv64-elf-gcc` 16.1.0 for RV32IM builds.
+- Renode 1.16.1.28836 for ARM Cortex, Cortex-A55, and RV32IM simulation.
+
+Commands passed:
+
+- `make quality RISCV_PREFIX=riscv64-elf-`
+- `make test-mpu`
+- `make latency-bench RISCV_PREFIX=riscv64-elf-`
+- `make renode-arm-platforms RISCV_PREFIX=riscv64-elf-`
+- `make renode-riscv-stress RISCV_PREFIX=riscv64-elf-`
+- `make instruction-bench RISCV_PREFIX=riscv64-elf-`
+- `make api-boundary-sim RISCV_PREFIX=riscv64-elf-`
+- `make evidence-package RISCV_PREFIX=riscv64-elf-`
+
+The host regression suite currently contains 23 named test functions and
+reported `7207 checks, 0 failures` under the default, ASan/UBSan, `-O2`, `-Os`,
+and LLVM coverage builds. The added white-box and black-box coverage is in
+`tests/test_path_coverage.c`.
+
+The LLVM coverage snapshot from this run reports total region coverage
+`63.11%`, function coverage `83.91%`, line coverage `78.11%`, and branch
+coverage `61.19%` across `kernel`, `compat/posix`, `posix/src`, and `tests`.
+
+The `instruction-bench` run reported AIXOS Cortex-M3 benchmark
+`heartbeat=50`, `messages=50`, `errors=0`, `ticks=499`, `switches=151`, and
+AIXOS RV32IM benchmark `heartbeat=46`, `messages=46`, `errors=0`, `ticks=499`,
+`switches=231`. FreeRTOS benchmark cases were skipped because
+`third_party/FreeRTOS-Kernel` is not included in this source package.
+
+The `api-boundary-sim` run reported 132 kernel boundary checks and 0 failures
+on both Cortex-M3 and RV32IM, plus 797 user-mode syscall wrapper checks and 0
+user failures on each target. That is 929 boundary checks per simulator target
+and 1858 boundary checks across the two simulator targets. The generated
+reports are
+`test-results/api-boundary/report.md` and
+`test-results/api-boundary/report.zh-CN.md`.
+
 ## Latency Benchmark
 
 Use:
@@ -129,3 +184,6 @@ be added per target.
 - The RISC-V toolchain can be supplied through `RISCV_TOOLCHAIN_DIR`.
 - Renode availability depends on the local Renode installation and robot-server
   configuration.
+- FreeRTOS benchmark execution requires adding a pinned
+  `third_party/FreeRTOS-Kernel` checkout; otherwise `instruction-bench` records
+  FreeRTOS cases as skipped and only validates AIXOS benchmark paths.

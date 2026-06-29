@@ -208,25 +208,11 @@ int aixos_mutex_delete(aixos_handle_t handle)
         aixos_arch_int_restore(flags);
         return AIXOS_ERR_INVAL;
     }
-    // Deleting a mutex with waiters transfers ownership to the next waiter.
     if (!aixos_list_is_empty(&mutex->wait_list)) {
-        aixos_tcb_t *next = AIXOS_CONTAINER_OF(
-            aixos_list_first(&mutex->wait_list), aixos_tcb_t, wait_node);
-        // 如果有 owner，先将其从持有链表移除
-        if (mutex->owner != AIXOS_HANDLE_INVALID) {
-            aixos_tcb_t *owner = aixos_tcb_from_handle(mutex->owner);
-            if (owner != NULL && !aixos_list_is_empty(&mutex->owner_node)) {
-                aixos_list_del(&mutex->owner_node);
-                aixos_list_init(&mutex->owner_node);
-                recompute_chain(owner, 0U);
-            }
-        }
-        // 将所有权转给最高优先级等待者
-        mutex->owner = next->handle;
-        mutex->lock_count = 1U;
-        aixos_list_add_tail(&mutex->owner_node, &next->held_mutexes);
-        aixos_task_wake(next, AIXOS_OK);
-    } else if (mutex->owner != AIXOS_HANDLE_INVALID) {
+        aixos_arch_int_restore(flags);
+        return AIXOS_ERR_BUSY;
+    }
+    if (mutex->owner != AIXOS_HANDLE_INVALID) {
         // 没有等待者但有 owner - 从 owner 的持有链表中移除
         aixos_tcb_t *owner = aixos_tcb_from_handle(mutex->owner);
         if (owner != NULL && !aixos_list_is_empty(&mutex->owner_node)) {

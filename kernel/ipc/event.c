@@ -191,3 +191,31 @@ int aixos_event_delete(aixos_handle_t handle)
     aixos_arch_int_restore(flags);
     return AIXOS_OK;
 }
+
+#ifdef AIXOS_HOST_TEST
+int aixos_test_event_add_waiter(aixos_handle_t handle, aixos_handle_t task,
+                                uint32_t mask, uint8_t mode)
+{
+    aixos_event_t *event;
+    aixos_tcb_t *tcb;
+    aixos_arch_flags_t flags = aixos_arch_int_disable();
+    event = event_from_handle(handle);
+    tcb = aixos_tcb_from_handle(task);
+    if (event == NULL || tcb == NULL || mask == 0U) {
+        aixos_arch_int_restore(flags);
+        return AIXOS_ERR_INVAL;
+    }
+    aixos_sched_remove_task(tcb);
+    tcb->state = AIXOS_TASK_BLOCKED;
+    tcb->wait_obj = event;
+    tcb->wait_list = &event->wait_list;
+    tcb->wait_type = AIXOS_OBJ_EVENT;
+    tcb->wait_result = AIXOS_OK;
+    tcb->pend_mask = mask;
+    tcb->pend_mode = mode;
+    tcb->pend_result = 0U;
+    aixos_list_add_tail(&tcb->wait_node, &event->wait_list);
+    aixos_arch_int_restore(flags);
+    return AIXOS_OK;
+}
+#endif

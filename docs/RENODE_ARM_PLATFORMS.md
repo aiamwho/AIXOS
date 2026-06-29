@@ -41,3 +41,13 @@ Run the Cortex-A55 instruction-level smoke:
 ```sh
 make instruction-sim
 ```
+
+Run benchmark-oriented instruction-level metrics:
+
+```sh
+make instruction-bench RISCV_PREFIX=riscv64-elf-
+```
+
+This command always validates AIXOS A55, Cortex-M3, and RV32IM benchmark paths.
+FreeRTOS benchmark rows are marked skipped unless `third_party/FreeRTOS-Kernel`
+is present.

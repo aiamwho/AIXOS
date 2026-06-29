@@ -18,14 +18,24 @@ run_log() {
 cp config/aixos_cfg.h "$OUT/config/aixos_cfg.h"
 cp include/aixos/version.h "$OUT/config/version.h"
 cp API_CONTRACT.md TESTING.md "$OUT/docs/"
+cp docs/RELEASE_NOTES.md "$OUT/docs/"
 cp docs/REQUIREMENTS_TRACEABILITY.md "$OUT/docs/"
 cp docs/POSIX_COMPATIBILITY.md "$OUT/docs/"
+for doc in API_CONTRACT.zh-CN.md TESTING.zh-CN.md \
+           docs/RELEASE_NOTES.zh-CN.md \
+           docs/REQUIREMENTS_TRACEABILITY.zh-CN.md \
+           docs/POSIX_COMPATIBILITY.zh-CN.md; do
+    if [ -f "$doc" ]; then
+        cp "$doc" "$OUT/docs/"
+    fi
+done
 
 run_log toolcheck make toolcheck
 run_log test make test
 run_log analyze make analyze
 run_log arm make arm
 run_log riscv-validate make riscv-validate RISCV_PREFIX="$RISCV_PREFIX_ARG"
+run_log api-boundary-sim make api-boundary-sim RISCV_PREFIX="$RISCV_PREFIX_ARG"
 run_log coverage make coverage
 run_log ram-report make ram-report RISCV_PREFIX="$RISCV_PREFIX_ARG"
 run_log manifest make manifest RISCV_PREFIX="$RISCV_PREFIX_ARG"
@@ -41,6 +51,21 @@ if [ -f build/reports/build-manifest.json ]; then
 fi
 if [ -f build/host-coverage/coverage.txt ]; then
     cp build/host-coverage/coverage.txt "$OUT/reports/"
+fi
+if [ -f test-results/api-boundary/report.md ]; then
+    cp test-results/api-boundary/report.md "$OUT/reports/api-boundary-report.md"
+fi
+if [ -f test-results/api-boundary/report.zh-CN.md ]; then
+    cp test-results/api-boundary/report.zh-CN.md "$OUT/reports/api-boundary-report.zh-CN.md"
+fi
+if [ -f test-results/api-boundary/results.csv ]; then
+    cp test-results/api-boundary/results.csv "$OUT/reports/api-boundary-results.csv"
+fi
+if [ -f test-results/verification-summary.md ]; then
+    cp test-results/verification-summary.md "$OUT/reports/verification-summary.md"
+fi
+if [ -f test-results/verification-summary.zh-CN.md ]; then
+    cp test-results/verification-summary.zh-CN.md "$OUT/reports/verification-summary.zh-CN.md"
 fi
 if [ -f build/arm/cortex-m3/AIXOS.elf ]; then
     cp build/arm/cortex-m3/AIXOS.elf "$OUT/reports/AIXOS-cortex-m3.elf"
@@ -69,7 +94,8 @@ RISC-V prefix: $RISCV_PREFIX_ARG
 
 Contents:
 - logs/: command output for verification steps
-- reports/: toolchain report, manifest, coverage, RAM report, ELF/map files
+- reports/: toolchain report, manifest, coverage, RAM report, API boundary
+  reports, ELF/map files
 - config/: qualified configuration and version headers
 - docs/: API contract, testing guide, traceability, POSIX compatibility
 EOF
